@@ -205,3 +205,22 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Manifests 
+*.manifest
+*.sha256
+
+# =========================
+# Local data outputs (project-specific)
+# Adjust these to match your folders
+# =========================
+data_incoming/
+data/incoming/
+exports/
+export/
+archive/
+archives/
+local_archive/
+local_archives/
+tmp/
+temp/
