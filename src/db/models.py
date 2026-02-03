@@ -5,16 +5,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
-
-DB_SCHEMA = "ipds"
+from src.db.base import Base, DB_SCHEMA
 
 def timestamptz():
     return TIMESTAMP(timezone=True)
-
-class Base(DeclarativeBase):
-    pass
-
 
 class Jobs(Base):
     __tablename__ = "jobs"
