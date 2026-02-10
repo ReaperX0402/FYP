@@ -4,7 +4,7 @@ from sqlalchemy import (
     BigInteger, Boolean, CheckConstraint, ForeignKey, Index, Text, UniqueConstraint, func
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.db.base import Base, DB_SCHEMA
 
 def timestamptz():
