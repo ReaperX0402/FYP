@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Decisions - Session {{ import_session_id }}</title>
+</head>
+<body>
+  <h2>Decision Page — Import Session {{ import_session_id }}</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul>
+        {% for cat, msg in messages %}
+          <li><b>{{ cat }}</b>: {{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('decisions.decide_bulk', import_session_id=import_session_id) }}">
+    <div>
+      <label>Reason (optional):</label>
+      <input name="reason" placeholder="blur / wrong angle / duplicate / etc">
+    </div>
+    <div>
+      <label>Notes (optional):</label>
+      <input name="notes" placeholder="extra notes">
+    </div>
+
+    <div style="margin-top:10px;">
+      <button name="action" value="accepted" type="submit">Bulk ACCEPT selected</button>
+      <button name="action" value="rejected" type="submit">Bulk REJECT selected</button>
+    </div>
+
+    <hr>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+      <tr>
+        <th>Select</th>
+        <th>Media ID</th>
+        <th>Local Path</th>
+        <th>Captured At</th>
+        <th>Status</th>
+        <th>Reason</th>
+      </tr>
+
+      {% for r in rows %}
+      <tr>
+        <td><input type="checkbox" name="media_id" value="{{ r.media_id }}"></td>
+        <td>{{ r.media_id }}</td>
+        <td>{{ r.local_path }}</td>
+        <td>{{ r.captured_at or "-" }}</td>
+        <td>{{ r.decision_status or "UNDECIDED" }}</td>
+        <td>{{ r.decision_reason or "-" }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </form>
+</body>
+</html>
