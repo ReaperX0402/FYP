@@ -6,9 +6,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
 def build_engine(echo: bool = False) -> Engine:
+    DATABASE_URL = os.getenv("DATABASE_URL")
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL is not set. Put in your .env or environment")
     return create_engine(DATABASE_URL, echo= echo, pool_pre_ping= True)

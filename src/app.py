@@ -1,27 +1,23 @@
-# src/app.py
 from __future__ import annotations
 
 from flask import Flask
 
-from db.session import build_engine, init_session_factory
-from web.routes.decisions import bp as decisions_bp
+from src.db.session import build_engine, init_session_factory
+from src.web.routes.decisions import bp as decisions_bp
+from dotenv import load_dotenv
 
 
 def create_app() -> Flask:
+    load_dotenv()
     app = Flask(__name__)
-    app.secret_key = "dev"  # move to env later
-
+    app.secret_key = "dev"  
     # ---- Database init ----
     engine = build_engine(echo=False)
     init_session_factory(engine)
 
-    # Optional health check on startup
-    # from db.session import db_health_check
-    # db_health_check(engine)
-
     # ---- Register blueprints ----
     app.register_blueprint(decisions_bp)
-
+    print(app.url_map)
     return app
 
 
