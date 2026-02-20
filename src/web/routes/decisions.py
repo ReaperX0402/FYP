@@ -4,16 +4,21 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from src.db.session import SessionLocal
 from src.core.decision_service import DecisionService, DecisionServiceError
+from src.web.auth import login_required
 
 bp = Blueprint("decisions", __name__)
 
+
 @bp.get("/sessions/<int:import_session_id>/decide")
+@login_required
 def decide_page(import_session_id: int):
     with SessionLocal() as db:
         rows = DecisionService.list_media_for_session(db, import_session_id)
     return render_template("sessions_decide.html", import_session_id=import_session_id, rows=rows)
 
+
 @bp.post("/sessions/<int:import_session_id>/decide/bulk")
+@login_required
 def bulk_decide(import_session_id: int):
     media_ids = request.form.getlist("media_id")
     action = request.form.get("action", "").strip().lower()

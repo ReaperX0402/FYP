@@ -17,7 +17,7 @@
     {% endif %}
   {% endwith %}
 
-  <form method="post" action="{{ url_for('decisions.decide_bulk', import_session_id=import_session_id) }}">
+  <form method="post" action="{{ url_for('decisions.bulk_decide', import_session_id=import_session_id) }}">
     <div>
       <label>Reason (optional):</label>
       <input name="reason" placeholder="blur / wrong angle / duplicate / etc">
