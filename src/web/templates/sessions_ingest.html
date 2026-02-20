@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+    <title>Ingestion - Session {{ session.import_session_id }}</title>
+</head>
+<body>
+    <h2>Ingestion Page</h2>
+
+    <p><strong>Session ID:</strong> {{ session.import_session_id }}</p>
+    <p><strong>UUT Serial:</strong> {{ session.uut_serial }}</p>
+    <p><strong>Operator:</strong> {{ session.operator_id }}</p>
+    <p><strong>Current Media Count:</strong> {{ media_count }}</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for cat, msg in messages %}
+                    <li><b>{{ cat }}</b>: {{ msg }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('ingestion.run_ingest', import_session_id=session.import_session_id) }}">
+        <button type="submit">Run Ingestion</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('decisions.decide_page', import_session_id=session.import_session_id) }}">
+        → Go to Decision Page
+    </a>
+</body>
+</html>

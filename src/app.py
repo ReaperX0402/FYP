@@ -1,23 +1,35 @@
 from __future__ import annotations
 
-from flask import Flask
+from pathlib import Path
+from flask import Flask, redirect, url_for
+from dotenv import load_dotenv
 
 from src.db.session import build_engine, init_session_factory
 from src.web.routes.decisions import bp as decisions_bp
-from dotenv import load_dotenv
+from src.web.routes.ingestion import bp as ingestion_bp
+from src.web.routes.auth import bp as auth_bp
 
 
 def create_app() -> Flask:
-    load_dotenv()
-    app = Flask(__name__)
-    app.secret_key = "dev"  
-    # ---- Database init ----
+    project_root = Path(__file__).resolve().parent.parent
+    load_dotenv(project_root / ".env", override=True)
+
+    templates_dir = Path(__file__).resolve().parent / "web" / "templates"
+    app = Flask(__name__, template_folder=str(templates_dir))
+    app.secret_key = "dev" 
+
     engine = build_engine(echo=False)
     init_session_factory(engine)
 
-    # ---- Register blueprints ----
+    # Register blueprints
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(ingestion_bp)
     app.register_blueprint(decisions_bp)
-    print(app.url_map)
+
+    @app.get("/")
+    def index():
+        return redirect(url_for("auth.login"))
+
     return app
 
 
