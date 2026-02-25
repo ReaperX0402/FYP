@@ -23,8 +23,6 @@ def login_post():
     if not operator_id:
         flash("Operator ID is required.", "error")
         return redirect(url_for("auth.login", next=next_url))
-
-    # Optional DB validation if Operators model exists
     try:
         from src.db.models import Operators  # type: ignore
         with SessionLocal() as db:
@@ -33,7 +31,6 @@ def login_post():
                 flash("Invalid Operator ID (not found in DB).", "error")
                 return redirect(url_for("auth.login", next=next_url))
     except Exception:
-        # If Operators model/table not ready, allow login anyway for prototype
         pass
 
     session[SESSION_OPERATOR_KEY] = operator_id
@@ -43,6 +40,6 @@ def login_post():
 
 @bp.get("/logout")
 def logout():
-    session.pop(SESSION_OPERATOR_KEY, None)
+    session.clear()  
     flash("Logged out.", "success")
     return redirect(url_for("auth.login"))
