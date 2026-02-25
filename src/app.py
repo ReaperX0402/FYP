@@ -26,12 +26,17 @@ def create_app() -> Flask:
     app.register_blueprint(ingestion_bp)
     app.register_blueprint(decisions_bp)
 
+    @app.after_request
+    def add_no_cache_headers(response):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
     @app.get("/")
     def index():
         return redirect(url_for("auth.login"))
-
     return app
-
 
 if __name__ == "__main__":
     app = create_app()
