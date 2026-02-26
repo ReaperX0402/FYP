@@ -46,10 +46,11 @@
   </table>
 
   <p>
-    <a href="{{ url_for('ingestion.new_session_page') }}">
-      Create New Import Session
-    </a>
+    <a href="{{ url_for('ingestion.new_job_page') }}">Create Job</a>
+    |
+    <a href="{{ url_for('ingestion.new_session_page') }}">Create Import Session</a>
+    |
+    <a href="{{ url_for('ingestion.jobs_page') }}">Manage Jobs</a>
   </p>
-
 </body>
 </html>

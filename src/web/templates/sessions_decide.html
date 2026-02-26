@@ -37,6 +37,7 @@
     <table border="1" cellpadding="6" cellspacing="0">
       <tr>
         <th>Select</th>
+        <th>No.</th>
         <th>Media ID</th>
         <th>Local Path</th>
         <th>Captured At</th>
@@ -47,6 +48,7 @@
       {% for r in rows %}
       <tr>
         <td><input type="checkbox" name="media_id" value="{{ r.media_id }}"></td>
+        <td>{{ loop.index }}</td>
         <td>{{ r.media_id }}</td>
         <td>{{ r.local_path }}</td>
         <td>{{ r.captured_at or "-" }}</td>
