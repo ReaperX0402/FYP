@@ -2,28 +2,37 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Operator Login</title>
+  <style>{% include 'css/login.css' %}</style>
 </head>
 <body>
-  <h2>Operator Login</h2>
+  <main class="page-shell">
+    <section class="panel">
+      <header class="panel-header">
+        <h2>Operator Login</h2>
+        <p>Secure access portal for industrial inspection workflows.</p>
+      </header>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul>
-        {% for cat, msg in messages %}
-          <li><b>{{ cat }}</b>: {{ msg }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flash-list">
+            {% for cat, msg in messages %}
+              <li class="flash-item flash-{{ cat }}"><b>{{ cat }}</b>: {{ msg }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
 
-  <form method="post" action="{{ url_for('auth.login_post') }}">
-    <input type="hidden" name="next_url" value="{{ next_url }}">
-    <div>
-      <label>Operator ID:</label>
-      <input name="operator_id" placeholder="e.g. OP03" required>
-    </div>
-    <button type="submit">Login</button>
-  </form>
+      <form class="form-stack" method="post" action="{{ url_for('auth.login_post') }}">
+        <input type="hidden" name="next_url" value="{{ next_url }}">
+        <div class="field-group">
+          <label for="operator_id">Operator ID:</label>
+          <input id="operator_id" name="operator_id" placeholder="e.g. OP03" required>
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </section>
+  </main>
 </body>
 </html>

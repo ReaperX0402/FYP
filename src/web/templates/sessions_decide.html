@@ -2,61 +2,69 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Decisions - Session {{ import_session_id }}</title>
+  <style>{% include 'css/sessions_decide.css' %}</style>
 </head>
 <body>
-  <h2>Decision Page — Import Session {{ import_session_id }}</h2>
+  <main class="page-shell">
+    <section class="panel">
+      <header>
+        <h2>Decision Page — Import Session {{ import_session_id }}</h2>
+      </header>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul>
-        {% for cat, msg in messages %}
-          <li><b>{{ cat }}</b>: {{ msg }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flash-list">
+            {% for cat, msg in messages %}
+              <li class="flash-item flash-{{ cat }}"><b>{{ cat }}</b>: {{ msg }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
 
-  <form method="post" action="{{ url_for('decisions.bulk_decide', import_session_id=import_session_id) }}">
-    <div>
-      <label>Reason (optional):</label>
-      <input name="reason" placeholder="blur / wrong angle / duplicate / etc">
-    </div>
-    <div>
-      <label>Notes (optional):</label>
-      <input name="notes" placeholder="extra notes">
-    </div>
+      <form method="post" action="{{ url_for('decisions.bulk_decide', import_session_id=import_session_id) }}">
+        <div class="form-grid">
+          <div class="field-group">
+            <label for="reason">Reason (optional):</label>
+            <input id="reason" name="reason" placeholder="blur / wrong angle / duplicate / etc">
+          </div>
+          <div class="field-group">
+            <label for="notes">Notes (optional):</label>
+            <input id="notes" name="notes" placeholder="extra notes">
+          </div>
+        </div>
 
-    <div style="margin-top:10px;">
-      <button name="action" value="accepted" type="submit">Bulk ACCEPT selected</button>
-      <button name="action" value="rejected" type="submit">Bulk REJECT selected</button>
-    </div>
+        <div class="action-row">
+          <button name="action" value="accepted" type="submit">Bulk ACCEPT selected</button>
+          <button name="action" value="rejected" type="submit">Bulk REJECT selected</button>
+        </div>
 
-    <hr>
+        <table>
+          <tr>
+            <th>Select</th>
+            <th>No.</th>
+            <th>Media ID</th>
+            <th>Local Path</th>
+            <th>Captured At</th>
+            <th>Status</th>
+            <th>Reason</th>
+          </tr>
 
-    <table border="1" cellpadding="6" cellspacing="0">
-      <tr>
-        <th>Select</th>
-        <th>No.</th>
-        <th>Media ID</th>
-        <th>Local Path</th>
-        <th>Captured At</th>
-        <th>Status</th>
-        <th>Reason</th>
-      </tr>
-
-      {% for r in rows %}
-      <tr>
-        <td><input type="checkbox" name="media_id" value="{{ r.media_id }}"></td>
-        <td>{{ loop.index }}</td>
-        <td>{{ r.media_id }}</td>
-        <td>{{ r.local_path }}</td>
-        <td>{{ r.captured_at or "-" }}</td>
-        <td>{{ r.decision_status or "UNDECIDED" }}</td>
-        <td>{{ r.decision_reason or "-" }}</td>
-      </tr>
-      {% endfor %}
-    </table>
-  </form>
+          {% for r in rows %}
+          <tr>
+            <td><input type="checkbox" name="media_id" value="{{ r.media_id }}"></td>
+            <td>{{ loop.index }}</td>
+            <td>{{ r.media_id }}</td>
+            <td>{{ r.local_path }}</td>
+            <td>{{ r.captured_at or "-" }}</td>
+            <td>{{ r.decision_status or "UNDECIDED" }}</td>
+            <td>{{ r.decision_reason or "-" }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </form>
+    </section>
+  </main>
 </body>
 </html>
