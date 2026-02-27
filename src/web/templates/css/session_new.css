@@ -1,0 +1,12 @@
+:root { font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+body { margin: 0; background: #edf2f8; color: #1f2a37; }
+.page-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.panel { width: min(620px, 100%); background: #fff; border: 1px solid #d3dce8; border-radius: 12px; padding: 24px; }
+.form-stack { display: grid; gap: 14px; margin-top: 14px; }
+.field-group { display: grid; gap: 6px; }
+input, select { border: 1px solid #bfcadd; border-radius: 8px; padding: 10px 12px; }
+button { border: 0; background: #0d4f8b; color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 700; }
+.empty-state { background: #f8fbff; border: 1px solid #dbe4f0; border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+.back-link { display: inline-block; margin-top: 16px; color: #0d4f8b; text-decoration: none; }
+.flash-list { list-style: none; padding: 0; margin: 0 0 12px; }
+.flash-item { border: 1px solid #d3dce8; border-radius: 8px; background: #f8fbff; padding: 8px 10px; margin-bottom: 8px; }
