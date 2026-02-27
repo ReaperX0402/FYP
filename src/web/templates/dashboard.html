@@ -2,55 +2,62 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard</title>
+  <style>{% include 'css/dashboard.css' %}</style>
 </head>
 <body>
-  <h2>Dashboard</h2>
+  <main class="page-shell">
+    <header class="topbar">
+      <div>
+        <h2>Dashboard</h2>
+        <p>Operations overview and import session control.</p>
+      </div>
+      <div class="user-meta">
+        <span>Logged in as: <b>{{ operator_id }}</b></span>
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+      </div>
+    </header>
 
-  <p>
-    Logged in as: <b>{{ operator_id }}</b>
-    | <a href="{{ url_for('auth.logout') }}">Logout</a>
-  </p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for cat, msg in messages %}
+            <li class="flash-item flash-{{ cat }}"><b>{{ cat }}</b>: {{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul>
-        {% for cat, msg in messages %}
-          <li><b>{{ cat }}</b>: {{ msg }}</li>
+    <section class="panel">
+      <h3>Recent Import Sessions</h3>
+
+      <table>
+        <tr>
+          <th>Session ID</th>
+          <th>UUT Serial</th>
+          <th>Operator</th>
+          <th>Actions</th>
+        </tr>
+        {% for s in sessions %}
+        <tr>
+          <td>{{ s.import_session_id }}</td>
+          <td>{{ s.uut_serial }}</td>
+          <td>{{ s.operator_id }}</td>
+          <td class="actions-cell">
+            <a href="{{ url_for('ingestion.ingest_page', import_session_id=s.import_session_id) }}">Ingest</a>
+            <a href="{{ url_for('decisions.decide_page', import_session_id=s.import_session_id) }}">Decide</a>
+          </td>
+        </tr>
         {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+      </table>
+    </section>
 
-  <h3>Recent Import Sessions</h3>
-
-  <table border="1" cellpadding="6" cellspacing="0">
-    <tr>
-      <th>Session ID</th>
-      <th>UUT Serial</th>
-      <th>Operator</th>
-      <th>Actions</th>
-    </tr>
-    {% for s in sessions %}
-    <tr>
-      <td>{{ s.import_session_id }}</td>
-      <td>{{ s.uut_serial }}</td>
-      <td>{{ s.operator_id }}</td>
-      <td>
-        <a href="{{ url_for('ingestion.ingest_page', import_session_id=s.import_session_id) }}">Ingest</a>
-        |
-        <a href="{{ url_for('decisions.decide_page', import_session_id=s.import_session_id) }}">Decide</a>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-
-  <p>
-    <a href="{{ url_for('ingestion.new_job_page') }}">Create Job</a>
-    |
-    <a href="{{ url_for('ingestion.new_session_page') }}">Create Import Session</a>
-    |
-    <a href="{{ url_for('ingestion.jobs_page') }}">Manage Jobs</a>
-  </p>
+    <nav class="quick-links">
+      <a href="{{ url_for('ingestion.new_job_page') }}">Create Job</a>
+      <a href="{{ url_for('ingestion.new_session_page') }}">Create Import Session</a>
+      <a href="{{ url_for('ingestion.jobs_page') }}">Manage Jobs</a>
+    </nav>
+  </main>
 </body>
 </html>
