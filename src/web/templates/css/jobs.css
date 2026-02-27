@@ -1,0 +1,12 @@
+:root { font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+body { margin: 0; background: #eef2f7; color: #1f2a37; }
+.page-shell { max-width: 980px; margin: 0 auto; padding: 28px 20px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.panel { background: #fff; border: 1px solid #d3dce8; border-radius: 12px; padding: 16px; }
+.back-link { color: #0d4f8b; text-decoration: none; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #e3e9f1; padding: 10px 12px; text-align: left; }
+th { background: #f8fbff; }
+button { border: 0; background: #1f2937; color: #fff; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.flash-list { list-style: none; margin: 0 0 14px; padding: 0; }
+.flash-item { border: 1px solid #d3dce8; border-radius: 8px; background: #fff; padding: 8px 10px; margin-bottom: 8px; }

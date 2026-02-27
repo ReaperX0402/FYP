@@ -1,0 +1,14 @@
+:root { font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+body { margin: 0; background: #eef2f7; color: #1f2a37; }
+.page-shell { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+.panel { background: #fff; border: 1px solid #d3dce8; border-radius: 12px; padding: 20px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.field-group { display: grid; gap: 6px; }
+input { border: 1px solid #bfcadd; border-radius: 8px; padding: 10px 12px; }
+.action-row { display: flex; gap: 10px; margin: 10px 0 16px; }
+button { border: 0; background: #0d4f8b; color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 700; cursor: pointer; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #e3e9f1; padding: 10px; text-align: left; vertical-align: top; }
+th { background: #f8fbff; }
+.flash-list { list-style: none; padding: 0; margin: 0 0 12px; }
+.flash-item { border: 1px solid #d3dce8; border-radius: 8px; background: #f8fbff; padding: 8px 10px; margin-bottom: 8px; }
