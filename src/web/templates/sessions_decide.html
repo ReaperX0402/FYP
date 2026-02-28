@@ -4,13 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Decisions - Session {{ import_session_id }}</title>
-  <link rel="stylesheet" href="{% static 'css/sessions_decide.css' %}">
+  <style>{% include 'css/sessions_decide.css' %}</style>
 </head>
 <body>
   <main class="page-shell">
     <section class="panel">
-      <header>
-        <h2>Decision Page — Import Session {{ import_session_id }}</h2>
+      <header class="panel-header">
+        <div>
+          <h2>Decision — Import Session {{ import_session_id }}</h2>
+          <p class="subtle">Click a thumbnail to inspect. Decide per image. Bulk still available below.</p>
+        </div>
       </header>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
@@ -23,48 +26,110 @@
         {% endif %}
       {% endwith %}
 
-      <form method="post" action="{{ url_for('decisions.bulk_decide', import_session_id=import_session_id) }}">
-        <div class="form-grid">
-          <div class="field-group">
-            <label for="reason">Reason (optional):</label>
-            <input id="reason" name="reason" placeholder="blur / wrong angle / duplicate / etc">
-          </div>
-          <div class="field-group">
-            <label for="notes">Notes (optional):</label>
-            <input id="notes" name="notes" placeholder="extra notes">
-          </div>
-        </div>
-
-        <div class="action-row">
-          <button name="action" value="accepted" type="submit">Bulk ACCEPT selected</button>
-          <button name="action" value="rejected" type="submit">Bulk REJECT selected</button>
-        </div>
-
-        <table>
-          <tr>
-            <th>Select</th>
-            <th>No.</th>
-            <th>Media ID</th>
-            <th>Local Path</th>
-            <th>Captured At</th>
-            <th>Status</th>
-            <th>Reason</th>
-          </tr>
-
+      <div class="layout">
+        <!-- Gallery -->
+        <section class="gallery">
           {% for r in rows %}
-          <tr>
-            <td><input type="checkbox" name="media_id" value="{{ r.media_id }}"></td>
-            <td>{{ loop.index }}</td>
-            <td>{{ r.media_id }}</td>
-            <td>{{ r.local_path }}</td>
-            <td>{{ r.captured_at or "-" }}</td>
-            <td>{{ r.decision_status or "UNDECIDED" }}</td>
-            <td>{{ r.decision_reason or "-" }}</td>
-          </tr>
+            <button
+              type="button"
+              class="thumb-card {{ 'is-accepted' if r.decision_status=='accepted' else ('is-rejected' if r.decision_status=='rejected' else 'is-undecided') }}"
+              onclick="selectMedia('{{ r.media_id }}', '{{ url_for('decisions.media_file', media_id=r.media_id) }}', '{{ r.decision_status or 'UNDECIDED' }}', `{{ (r.decision_reason or '').replace('`','') }}`)"
+              title="Media {{ r.media_id }}"
+            >
+              <img class="thumb" src="{{ url_for('decisions.media_file', media_id=r.media_id) }}" loading="lazy" alt="media {{ r.media_id }}">
+              <div class="thumb-meta">
+                <span class="mono">#{{ r.media_id }}</span>
+                <span class="pill {{ 'pill-accepted' if r.decision_status=='accepted' else ('pill-rejected' if r.decision_status=='rejected' else 'pill-undecided') }}">
+                  {{ r.decision_status or 'UNDECIDED' }}
+                </span>
+              </div>
+            </button>
           {% endfor %}
-        </table>
-      </form>
+        </section>
+
+        <!-- Inspector -->
+        <aside class="inspector">
+          <div class="inspect-header">
+            <h3>Inspector</h3>
+            <div class="inspect-meta">
+              <div><b>Selected:</b> <span id="sel_id">None</span></div>
+              <div><b>Status:</b> <span id="sel_status">-</span></div>
+            </div>
+          </div>
+
+          <div class="preview">
+            <img id="preview_img" alt="preview" />
+          </div>
+
+          <form id="decide_form" method="post">
+            <input type="hidden" name="import_session_id" value="{{ import_session_id }}">
+
+            <div class="field-group">
+              <label for="reason">Reason (optional)</label>
+              <input id="reason" name="reason" placeholder="blur / wrong angle / duplicate / etc">
+            </div>
+
+            <div class="field-group">
+              <label for="notes">Notes (optional)</label>
+              <input id="notes" name="notes" placeholder="extra notes">
+            </div>
+
+            <div class="action-row">
+              <button class="btn btn-accept" name="action" value="accepted" type="submit" disabled id="btn_accept">ACCEPT</button>
+              <button class="btn btn-reject" name="action" value="rejected" type="submit" disabled id="btn_reject">REJECT</button>
+            </div>
+
+            <p class="subtle">Tip: You must select an image before deciding.</p>
+          </form>
+        </aside>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Keep your bulk flow (optional) -->
+      <details>
+        <summary>Bulk actions (advanced)</summary>
+
+        <form method="post" action="{{ url_for('decisions.bulk_decide', import_session_id=import_session_id) }}">
+          <div class="action-row">
+            <button class="btn btn-accept" name="action" value="accepted" type="submit">Bulk ACCEPT selected</button>
+            <button class="btn btn-reject" name="action" value="rejected" type="submit">Bulk REJECT selected</button>
+          </div>
+
+          <div class="bulk-grid">
+            {% for r in rows %}
+              <label class="bulk-item">
+                <input type="checkbox" name="media_id" value="{{ r.media_id }}">
+                <span class="mono">#{{ r.media_id }}</span>
+                <span class="pill {{ 'pill-accepted' if r.decision_status=='accepted' else ('pill-rejected' if r.decision_status=='rejected' else 'pill-undecided') }}">
+                  {{ r.decision_status or 'UNDECIDED' }}
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </form>
+      </details>
+
     </section>
   </main>
+
+  <script>
+    function selectMedia(mediaId, imgUrl, status, reason) {
+      document.getElementById("sel_id").textContent = mediaId;
+      document.getElementById("sel_status").textContent = status || "-";
+
+      const img = document.getElementById("preview_img");
+      img.src = imgUrl;
+
+      const form = document.getElementById("decide_form");
+      form.action = `/media/${mediaId}/decide`;
+
+      document.getElementById("btn_accept").disabled = false;
+      document.getElementById("btn_reject").disabled = false;
+
+      // Prefill reason field with existing reason for convenience
+      document.getElementById("reason").value = reason || "";
+    }
+  </script>
 </body>
 </html>

@@ -7,8 +7,10 @@ from sqlalchemy.orm import Session
 from src.db.models import Media, ImportSession
 from src.db.repo_decisions import upsert_decision
 
+
 class DecisionServiceError(Exception):
     pass
+
 
 @dataclass(frozen=True)
 class MediaDecisionView:
@@ -19,15 +21,17 @@ class MediaDecisionView:
     decision_reason: str | None
     decision_notes: str | None
 
+
 class DecisionService:
     VALID = {"accepted", "rejected"}
 
     @staticmethod
     def list_media_for_session(db: Session, import_session_id: int) -> list[MediaDecisionView]:
+        # Better ordering than media_id: show in capture-time order when available
         rows = db.scalars(
             select(Media)
             .where(Media.import_session_id == import_session_id)
-            .order_by(Media.media_id.asc())
+            .order_by(Media.captured_at.asc().nulls_last(), Media.media_id.asc())
         ).all()
 
         out: list[MediaDecisionView] = []
@@ -40,10 +44,55 @@ class DecisionService:
                     captured_at=m.captured_at,
                     decision_status=(d.status if d else None),
                     decision_reason=(d.reason if d else None),
-                    decision_notes=(d.notes if d else None)
+                    decision_notes=(d.notes if d else None),
                 )
             )
         return out
+
+    @staticmethod
+    def set_decision_for_media(
+        db: Session,
+        *,
+        import_session_id: int,
+        media_id: int,
+        status: str,
+        reason: str | None = None,
+        notes: str | None = None,
+    ) -> None:
+        """
+        Single-item decision.
+        Enforces: media_id must belong to import_session_id.
+        Operator is derived from ImportSession.operator_id (not stored in decision row).
+        """
+        status = (status or "").strip().lower()
+        if status not in DecisionService.VALID:
+            raise DecisionServiceError("Invalid decision status. Must be 'accepted' or 'rejected'.")
+
+        # Ensure session exists
+        sess = db.scalar(
+            select(ImportSession).where(ImportSession.import_session_id == import_session_id)
+        )
+        if not sess:
+            raise DecisionServiceError(f"ImportSession not found: {import_session_id}")
+
+        # Ensure media exists and belongs to this session
+        mid = int(media_id)
+        ok = db.scalar(
+            select(Media.media_id).where(
+                Media.import_session_id == import_session_id,
+                Media.media_id == mid,
+            )
+        )
+        if not ok:
+            raise DecisionServiceError(f"Media {mid} is not in ImportSession {import_session_id}")
+
+        upsert_decision(
+            db,
+            media_id=mid,
+            status=status,
+            reason=reason,
+            notes=notes,
+        )
     
     @staticmethod
     def bulk_set_decisions_for_session(
@@ -53,21 +102,25 @@ class DecisionService:
         media_ids: list[int],
         status: str,
         reason: str | None = None,
-        notes: str | None = None
+        notes: str | None = None,
     ) -> int:
         """
         Enforces: only media inside this import_session_id can be decided here.
         Operator is derived from ImportSession.operator_id.
         """
+        status = (status or "").strip().lower()
         if status not in DecisionService.VALID:
             raise DecisionServiceError("Invalid decision status. Must be 'accepted' or 'rejected'.")
-         
+
+        # sanitize + de-dupe while preserving order
         media_ids = [int(x) for x in media_ids if str(x).strip()]
-        media_ids = list(dict.fromkeys(media_ids))  # de-dupe keep order
+        media_ids = list(dict.fromkeys(media_ids))
         if not media_ids:
             return 0
-        
-        sess = db.scalar(select(ImportSession).where(ImportSession.import_session_id == import_session_id))
+
+        sess = db.scalar(
+            select(ImportSession).where(ImportSession.import_session_id == import_session_id)
+        )
         if not sess:
             raise DecisionServiceError(f"ImportSession not found: {import_session_id}")
 
@@ -86,7 +139,7 @@ class DecisionService:
             raise DecisionServiceError(
                 f"Some media IDs are not in this session: {missing_or_wrong_session}"
             )
-        
+
         for mid in media_ids:
             upsert_decision(
                 db,
@@ -97,4 +150,4 @@ class DecisionService:
             )
 
         return len(media_ids)
-        
+    
