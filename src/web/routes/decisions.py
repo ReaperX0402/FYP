@@ -11,9 +11,9 @@ from src.web.auth import login_required
 bp = Blueprint("decisions", __name__)
 
 ALLOWED_MEDIA_ROOTS = [
-    Path("data/incoming").resolve()
+    Path("data/incoming").resolve(),
+    Path("data/archive").resolve(),
 ]
-
 
 @bp.get("/sessions/<int:import_session_id>/decide")
 @login_required
@@ -52,38 +52,6 @@ def bulk_decide(import_session_id: int):
 
     return redirect(url_for("decisions.decide_page", import_session_id=import_session_id))
 
-def _is_under_allowed_root(p: Path) -> bool:
-    p = p.resolve()
-    for root in ALLOWED_MEDIA_ROOTS:
-        root = root.resolve()
-        try:
-            p.relative_to(root)
-            return True
-        except ValueError:
-            continue
-    return False
-
-@bp.get("/media/<int:media_id>/file")
-@login_required
-def media_file(media_id: int):
-    with SessionLocal() as db:
-        m = db.get(Media, media_id)
-        if not m:
-            abort(404)
-
-        if not m.local_path:
-            abort(404)
-
-        p = Path(m.local_path)
-
-    if not _is_under_allowed_root(p):
-        abort(403)
-
-    if not p.exists() or not p.is_file():
-        abort(404)
-
-    return send_file(p, conditional=True)
-
 @bp.post("/media/<int:media_id>/decide")
 @login_required
 def decide_one(media_id: int):
@@ -108,3 +76,46 @@ def decide_one(media_id: int):
         flash(str(e), "error")
 
     return redirect(url_for("decisions.decide_page", import_session_id=import_session_id))
+
+def _resolve_media_path(raw: str) -> Path:
+    p = Path(raw)
+
+    if not p.is_absolute():
+        p = (Path.cwd() / p)
+    try:
+        return p.resolve(strict=False)
+    except Exception:
+        abort(404)
+
+def _is_under_allowed_root(p: Path) -> bool:
+    try:
+        p = p.resolve(strict=False)
+    except Exception:
+        return False
+
+    for root in ALLOWED_MEDIA_ROOTS:
+        root = root.resolve()
+        try:
+            p.relative_to(root)
+            return True
+        except ValueError:
+            continue
+    return False
+
+@bp.get("/media/<int:media_id>/file")
+@login_required
+def media_file(media_id: int):
+    with SessionLocal() as db:
+        m = db.get(Media, media_id)
+        if not m or not m.local_path:
+            abort(404)
+
+        p = _resolve_media_path(m.local_path)
+
+    if not _is_under_allowed_root(p):
+        abort(403)
+
+    if not p.exists() or not p.is_file():
+        abort(404)
+
+    return send_file(p, conditional=True)
