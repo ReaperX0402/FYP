@@ -31,18 +31,22 @@ def build_export_photo_name(*, uut_serial: str, operator_id: str, export_ts: str
     ext = Path(original_name).suffix.lower()
     safe_uut = _sanitize_token(uut_serial)
     safe_op = _sanitize_token(operator_id)
-    return f"UUT_{safe_uut}_OP{safe_op}_{export_ts}_{seq:03d}{ext}"
+    return f"{safe_uut}_{safe_op}_{export_ts}_{seq:03d}{ext}"
 
 # Query to retrieve accepted image
 def _get_accepted_media(db: Session, import_session_id: int) -> list[tuple[Media, Decisions]]:
-    stmt= (select(Media, Decisions).
-          join(Decisions, Decisions.media_id == Media.media_id).
-          where(Media.import_session_id == import_session_id).
-          where(Decisions.status == "accepted").
-          order_by(Media.import_session_id == import_session_id)
-          )
+    stmt = (
+        select(Media, Decisions)
+        .join(Decisions, Decisions.media_id == Media.media_id)
+        .where(Media.import_session_id == import_session_id)
+        .where(Decisions.status == "accepted")
+        .order_by(
+            Media.captured_at.asc().nulls_last(),
+            Media.media_id.asc(),
+        )
+    )
     return list(db.execute(stmt).all())
-    
+
 @dataclass
 class ZipExportResult:
     export_id: int
@@ -155,12 +159,16 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
     #   manifest.json
     #   photos/<renamed files>
 
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.writestr("manifest.json", manifest_bytes)
+    tmp_zip = zip_path.with_suffix(zip_path.suffix + ".part")
+    if tmp_zip.exists():
+        tmp_zip.unlink()
 
+    with zipfile.ZipFile(tmp_zip, "w", compression=zipfile.ZIP_DEFLATED) as z:
+        z.writestr("manifest.json", manifest_bytes)
         for f in sorted(staging_dir.iterdir()):
-            # all staging entries are photos
             z.write(f, arcname=f"photos/{f.name}")
+
+    tmp_zip.replace(zip_path) 
 
     export_row = Exports(
         import_session_id=import_session_id,
@@ -170,15 +178,27 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
         status="created",
     )
 
+    export_row = Exports(
+    import_session_id=import_session_id,
+    export_path=str(zip_path),
+    manifest_path=str(sidecar_manifest_path),
+    manifest_hash=manifest_hash,
+    status="created",
+)
+
     db.add(export_row)
-    db.commit()
+    db.flush()
     db.refresh(export_row)
 
-    #Local archive 
     archive_path = archive_root / zip_name
-    shutil.copy2(zip_path, archive_path)
+    tmp_archive = archive_path.with_suffix(archive_path.suffix + ".part")
+    if tmp_archive.exists():
+        tmp_archive.unlink()
 
-    # Verify archive 
+    shutil.copy2(zip_path, tmp_archive)
+    tmp_archive.replace(archive_path)
+
+    # Verify archive
     ok = sha256_file(zip_path) == sha256_file(archive_path)
 
     archive_row = LocalArchives(
