@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Export - Session {{ sess.import_session_id }}</title>
+  <style>{% include 'css/sessions_export.css' %}</style>
+</head>
+<body>
+  <main class="page-shell">
+    <header class="topbar">
+      <div>
+        <h2>Export</h2>
+        <p>
+          Import Session <span class="mono">#{{ sess.import_session_id }}</span>
+          — UUT <b>{{ sess.uut_serial }}</b>
+        </p>
+      </div>
+      <div class="user-meta">
+        <a href="{{ url_for('ingestion.dashboard') }}">Back to Dashboard</a>
+        <a href="{{ url_for('decisions.decide_page', import_session_id=sess.import_session_id) }}">Back to Decide</a>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for cat, msg in messages %}
+            <li class="flash-item flash-{{ cat }}"><b>{{ cat }}</b>: {{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <section class="panel">
+      <h3>Readiness</h3>
+
+      <div class="grid-2">
+        <div class="stat"><b>Total media</b> {{ total }}</div>
+        <div class="stat"><b>Accepted</b> {{ accepted }}</div>
+        <div class="stat"><b>Rejected</b> {{ rejected }}</div>
+        <div class="stat"><b>Undecided</b> {{ undecided }}</div>
+      </div>
+
+      {% set ready = (accepted > 0 and undecided == 0) %}
+      <p class="hint">
+        Export is enabled only when <b>all images are decided</b> and at least <b>1 image is accepted</b>.
+      </p>
+
+      <hr class="divider">
+
+      <h3>Export Action</h3>
+      <div class="btnbar">
+        <form method="post" action="{{ url_for('exports.export_run', import_session_id=sess.import_session_id) }}">
+          <button class="btn btn-primary" type="submit" {% if not ready %}disabled{% endif %}>
+            Run Export
+          </button>
+        </form>
+
+      </div>
+
+      <hr class="divider">
+
+      <h3>Latest Export</h3>
+
+      {% if latest_export %}
+        <table>
+          <tr>
+            <th>Export ID</th>
+            <th>Status</th>
+            <th>Created At</th>
+          </tr>
+          <tr>
+            <td class="mono">#{{ latest_export.export_id }}</td>
+            <td>{{ latest_export.status }}</td>
+            <td>{{ latest_export.created_at }}</td>
+          </tr>
+        </table>
+
+        <p class="hint">Server paths</p>
+        <div class="pathbox mono">{{ latest_export.export_path }}</div>
+        <div style="height:8px"></div>
+        <div class="pathbox mono">{{ latest_export.manifest_path }}</div>
+      {% else %}
+        <p class="hint">No export generated yet for this session.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

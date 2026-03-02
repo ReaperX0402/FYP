@@ -47,6 +47,7 @@
           <td class="actions-cell">
             <a href="{{ url_for('ingestion.ingest_page', import_session_id=s.import_session_id) }}">Ingest</a>
             <a href="{{ url_for('decisions.decide_page', import_session_id=s.import_session_id) }}">Decide</a>
+            <a href="{{ url_for('exports.export_page', import_session_id=s.import_session_id) }}">Export</a>
           </td>
         </tr>
         {% endfor %}
