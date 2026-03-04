@@ -104,21 +104,3 @@ CREATE TABLE IF NOT EXISTS ipds.local_archives (
   CONSTRAINT local_archives_one_per_export_uq UNIQUE (export_id),
   CONSTRAINT local_archives_verify_status_chk CHECK (verify_status IN ('pending','verified','failed'))
 );
-
--- =========================
--- EXPORT_DELIVERIES
--- =========================
-CREATE TABLE IF NOT EXISTS ipds.export_deliveries (
-  delivery_id       BIGSERIAL PRIMARY KEY,
-  export_id         BIGINT NOT NULL REFERENCES ipds.exports(export_id) ON UPDATE CASCADE ON DELETE RESTRICT,
-  delivered_by      TEXT NOT NULL REFERENCES ipds.operators(operator_id) ON UPDATE CASCADE ON DELETE RESTRICT,
-  destination_path  TEXT NOT NULL,
-  delivered_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  result            TEXT NOT NULL,
-  error_message     TEXT,
-  CONSTRAINT export_deliveries_result_chk CHECK (result IN ('succeeded','failed'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_export_deliveries_export_id    ON ipds.export_deliveries(export_id);
-CREATE INDEX IF NOT EXISTS idx_export_deliveries_delivered_by ON ipds.export_deliveries(delivered_by);
-CREATE INDEX IF NOT EXISTS idx_export_deliveries_delivered_at ON ipds.export_deliveries(delivered_at);
