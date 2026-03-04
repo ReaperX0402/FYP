@@ -35,7 +35,6 @@ class Operators(Base):
     created_at: Mapped[object] = mapped_column(timestamptz(), nullable=False, server_default=func.now())
 
     import_sessions: Mapped[list["ImportSession"]] = relationship(back_populates="operator")
-    deliveries: Mapped[list["ExportDeliveries"]] = relationship(back_populates="operator")
 
 
 class ImportSession(Base):
@@ -141,7 +140,7 @@ class Exports(Base):
 
     import_session: Mapped["ImportSession"] = relationship(back_populates="exports")
     local_archive: Mapped["LocalArchives | None"] = relationship(back_populates="export", uselist=False)
-    deliveries: Mapped[list["ExportDeliveries"]] = relationship(back_populates="export")
+
 
 
 class LocalArchives(Base):
