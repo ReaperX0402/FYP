@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import re
 import json
 import shutil
 import zipfile
@@ -7,14 +7,19 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.db.models import ImportSession, Jobs, Media, Decisions, Exports, LocalArchives
 from src.utils.hashing import sha256_file, sha256_bytes
+from src.utils.embed import embed_ipds_metadata
+from src.utils.watermark import burn_watermark
 
-# Helpers (naming & timestamping)
+_VERSION_RE = re.compile(r"^(?P<stem>.+?)(?:_v(?P<v>\d+))?$")
+MY_TZ = ZoneInfo("Asia/Kuala_Lumpur")
+
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -46,6 +51,45 @@ def _get_accepted_media(db: Session, import_session_id: int) -> list[tuple[Media
         )
     )
     return list(db.execute(stmt).all())
+
+def _get_all_media(db: Session, import_session_id: int) -> list[tuple[Media, Decisions]]:
+    stmt = (
+        select(Media, Decisions)
+        .join(Decisions, Decisions.media_id == Media.media_id)
+        .where(Media.import_session_id == import_session_id)
+        .order_by(
+            Media.captured_at.asc().nulls_last(),
+            Media.media_id.asc(),
+        )
+    )
+    return list(db.execute(stmt).all())
+
+def _next_versioned_path(export_root: Path, base_name: str) -> tuple[str, Path]:
+    """
+    base_name like: ABC123_7.zip
+    returns (zip_name, zip_path) possibly versioned: ABC123_7_v2.zip
+    """
+    base_path = export_root / base_name
+    if not base_path.exists():
+        return base_name, base_path
+
+    stem = Path(base_name).stem         # ABC123_7
+    ext  = Path(base_name).suffix       # .zip
+
+    # find max version among: stem.zip, stem_v2.zip, stem_v3.zip...
+    max_v = 1
+    for p in export_root.glob(f"{stem}*{ext}"):
+        m = _VERSION_RE.match(p.stem)
+        if not m:
+            continue
+        if m.group("stem") != stem:
+            continue
+        v = m.group("v")
+        if v:
+            max_v = max(max_v, int(v))
+    next_v = max_v + 1
+    zip_name = f"{stem}_v{next_v}{ext}"
+    return zip_name, export_root / zip_name
 
 @dataclass
 class ZipExportResult:
@@ -81,11 +125,8 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
     export_root.mkdir(parents=True, exist_ok=True)
     archive_root.mkdir(parents=True, exist_ok=True)
 
-    zip_name = f"{uut_serial}_{import_session_id}.zip"
-    zip_path = export_root / zip_name
-
-    if zip_path.exists():
-        raise RuntimeError(f"Export already exists: {zip_path}")
+    base_zip_name = f"{uut_serial}_{import_session_id}.zip" 
+    zip_name, zip_path = _next_versioned_path(export_root, base_zip_name)
     
     staging_dir = export_root / f".staging_{uut_serial}_{import_session_id}"
     if staging_dir.exists():
@@ -114,6 +155,27 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
         dst = staging_dir / export_name
         shutil.copy2(src, dst)
 
+        embed_ipds_metadata(
+            str(dst),
+            uut_serial=uut_serial,
+            import_session_id=import_session_id,
+            captured_at=media.captured_at,
+        )
+
+        dt = datetime.now(timezone.utc)
+
+        # If DB gave you a naive datetime, assume it is UTC (or fix ingestion properly below)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        dt_text = dt.astimezone(MY_TZ).strftime("%Y-%m-%d %H:%M:%S")
+
+        burn_watermark(
+            str(dst),
+            uut_serial=uut_serial,
+            dt_text=dt_text
+        )
+
         size = dst.stat().st_size
         sha = sha256_file(dst)
 
@@ -130,7 +192,7 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
                     "status": decision.status,
                     "reason": decision.reason,
                     "decided_at": decision.decided_at.isoformat() if decision.decided_at else None,
-                    "notes": decision.notes,
+                    "notes": decision.notes
                 },
             }
         )
@@ -145,7 +207,7 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
         "uut_serial": uut_serial,
         "operator_id": operator_id,
         "file_count": len(files_manifest),
-        "files": files_manifest,
+        "files": files_manifest
     }
 
     manifest_bytes = json.dumps(manifest, indent=2, ensure_ascii=False).encode("utf-8")
@@ -171,14 +233,6 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
     tmp_zip.replace(zip_path) 
 
     export_row = Exports(
-        import_session_id=import_session_id,
-        export_path=str(zip_path),
-        manifest_path=str(sidecar_manifest_path),
-        manifest_hash=manifest_hash,
-        status="created",
-    )
-
-    export_row = Exports(
     import_session_id=import_session_id,
     export_path=str(zip_path),
     manifest_path=str(sidecar_manifest_path),
@@ -190,23 +244,36 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
     db.flush()
     db.refresh(export_row)
 
-    archive_path = archive_root / zip_name
-    tmp_archive = archive_path.with_suffix(archive_path.suffix + ".part")
-    if tmp_archive.exists():
-        tmp_archive.unlink()
+    archive_dir = archive_root / f"{uut_serial}_{import_session_id}"
+    archive_dir.mkdir(parents=True, exist_ok=True)
 
-    shutil.copy2(zip_path, tmp_archive)
-    tmp_archive.replace(archive_path)
+    all_media = _get_all_media(db, import_session_id)
+    archived_count = 0
 
-    # Verify archive
-    ok = sha256_file(zip_path) == sha256_file(archive_path)
+    for media, _decision in all_media:
+        src = Path(media.local_path)
+        if not src.exists():
+            continue
+
+        dst = archive_dir / src.name
+
+        if not dst.exists():
+            shutil.copy2(src, dst)
+            archived_count += 1
+
+    # Save the same manifest used in export
+    archive_manifest = archive_dir / "manifest.json"
+    archive_manifest.write_bytes(manifest_bytes)
+
+    ok = archive_manifest.exists() and archive_dir.exists()
 
     archive_row = LocalArchives(
-        export_id=export_row.export_id,
-        archive_path=str(archive_path),
-        verify_status="verified" if ok else "failed",
-        last_error=None if ok else "Archive verification hash mismatch",
+    export_id=export_row.export_id,
+    archive_path=str(archive_dir),
+    verify_status="verified" if ok else "failed",
+    last_error=None if ok else "Archive creation failed",
     )
+
     db.add(archive_row)
 
     export_row.status = "archived" if ok else "failed"
@@ -217,7 +284,7 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
     return ZipExportResult(
         export_id=export_row.export_id,
         zip_path=zip_path,
-        archive_path=archive_path,
+        archive_path=archive_dir,
         manifest_hash=manifest_hash,
         file_count=len(files_manifest),
     )

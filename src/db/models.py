@@ -163,31 +163,3 @@ class LocalArchives(Base):
     created_at: Mapped[object] = mapped_column(timestamptz(), nullable=False, server_default=func.now())
 
     export: Mapped["Exports"] = relationship(back_populates="local_archive")
-
-
-class ExportDeliveries(Base):
-    __tablename__ = "export_deliveries"
-    __table_args__ = (
-        CheckConstraint("result IN ('succeeded','failed')", name="export_deliveries_result_chk"),
-        Index("idx_export_deliveries_export_id", "export_id"),
-        Index("idx_export_deliveries_delivered_by", "delivered_by"),
-        Index("idx_export_deliveries_delivered_at", "delivered_at"),
-        {"schema": DB_SCHEMA},
-    )
-
-    delivery_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    export_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey(f"{DB_SCHEMA}.exports.export_id", onupdate="CASCADE", ondelete="RESTRICT"),
-        nullable=False
-    )
-    delivered_by: Mapped[str] = mapped_column(
-        Text, ForeignKey(f"{DB_SCHEMA}.operators.operator_id", onupdate="CASCADE", ondelete="RESTRICT"),
-        nullable=False
-    )
-    destination_path: Mapped[str] = mapped_column(Text, nullable=False)
-    delivered_at: Mapped[object] = mapped_column(timestamptz(), nullable=False, server_default=func.now())
-    result: Mapped[str] = mapped_column(Text, nullable=False)
-    error_message: Mapped[str | None] = mapped_column(Text)
-
-    export: Mapped["Exports"] = relationship(back_populates="deliveries")
-    operator: Mapped["Operators"] = relationship(back_populates="deliveries")
