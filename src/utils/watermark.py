@@ -74,8 +74,7 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
     base = img.convert("RGBA" if has_alpha else "RGB")
     w, h = base.size
 
-    # Smaller, controlled sizing (tune here)
-    font_size = _clamp(int(w * 0.020), 22, 44)
+    font_size = _clamp(int(w * 0.026), 28, 56)
     pad = _clamp(int(w * 0.010), 10, 20)
     border_w = _clamp(int(w * 0.0025), 2, 5)
     line_gap = _clamp(int(pad * 0.45), 4, 12)
@@ -95,11 +94,30 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
     # Decide logo block width (square), based on font height
     # Make it stable even when text wraps.
     sample_h = draw.textbbox((0, 0), "Ag", font=font)[3]
-    logo_size = _clamp(int(sample_h * 2.2), 40, 110)  # logo square
-    logo_block_w = (logo_size + pad) if logo_path else 0
+    logo_w = logo_h = 0
+    logo_img = None
+    logo_gap = 4
+
+    if logo_path:
+        logo_img = Image.open(logo_path).convert("RGBA")
+
+        # Size by height, BUT cap width hard
+        target_h = _clamp(int(sample_h * 1.8), 48, 90)
+        aspect = logo_img.width / logo_img.height
+        target_w = int(target_h * aspect)
+
+        max_logo_w = int(w * 0.16)   # hard cap: logo cannot eat too much width
+        if target_w > max_logo_w:
+            target_w = max_logo_w
+            target_h = int(target_w / aspect)
+
+        logo_img = logo_img.resize((target_w, target_h), Image.LANCZOS)
+        logo_w, logo_h = logo_img.size
+    else:
+        logo_gap = 0
 
     # Available text width after logo block and padding
-    text_max_w = max_banner_w - (pad * 2) - logo_block_w
+    text_max_w = max_banner_w - (pad * 2) - logo_w - logo_gap
     if text_max_w < 80:  # safety floor
         text_max_w = 80
 
@@ -122,8 +140,8 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
         text_h += line_gap * (len(all_lines) - 1)
 
     # Banner dimensions
-    content_h = max(text_h, logo_size if logo_path else 0)
-    banner_w = min(max_banner_w, (pad * 2) + logo_block_w + text_w)
+    content_h = max(text_h, logo_h if logo_path else 0)
+    banner_w = min(max_banner_w, (pad * 2) + logo_w + logo_gap + text_w)
     banner_h = (pad * 2) + content_h
 
     # Draw banner
@@ -135,8 +153,7 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
     if logo_path:
         try:
             logo = Image.open(logo_path).convert("RGBA")
-            # keep aspect ratio, fit inside square
-            logo.thumbnail((logo_size, logo_size), Image.Resampling.LANCZOS)
+            logo.thumbnail((logo_w, logo_h), Image.Resampling.LANCZOS)
             lx = pad
             ly = pad + (content_h - logo.size[1]) // 2
             overlay.paste(logo, (lx, ly), logo)
@@ -145,7 +162,7 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
             pass
 
     # Draw wrapped text (aligned to top, with padding)
-    tx = pad + logo_block_w
+    tx = pad + logo_w + logo_gap
     ty = pad
     for i, ln in enumerate(all_lines):
         draw.text((tx, ty), ln, fill=(0, 0, 0, 255), font=font)

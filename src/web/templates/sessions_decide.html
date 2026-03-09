@@ -119,6 +119,13 @@
         <summary>Bulk actions (advanced)</summary>
 
         <form method="post" action="{{ url_for('decisions.bulk_decide', import_session_id=import_session_id) }}">
+          <div class="bulk-toolbar">
+            <label class="bulk-select-all">
+              <input type="checkbox" id="select_all_bulk">
+              <span>Select all</span>
+            </label>
+          </div>
+
           <div class="action-row">
             <button class="btn btn-accept" name="action" value="accepted" type="submit">Bulk ACCEPT selected</button>
             <button class="btn btn-reject" name="action" value="rejected" type="submit">Bulk REJECT selected</button>
@@ -127,7 +134,7 @@
           <div class="bulk-grid">
             {% for r in rows %}
               <label class="bulk-item">
-                <input type="checkbox" name="media_id" value="{{ r.media_id }}">
+                <input type="checkbox" name="media_id" value="{{ r.media_id }}" class="bulk-checkbox">
                 <span class="mono">#{{ r.media_id }}</span>
                 <span class="pill {{ 'pill-accepted' if r.decision_status=='accepted' else ('pill-rejected' if r.decision_status=='rejected' else 'pill-undecided') }}">
                   {{ r.decision_status or 'UNDECIDED' }}
@@ -143,21 +150,42 @@
 
   <script>
     function selectMedia(mediaId, imgUrl, status, reason) {
-      document.getElementById("sel_id").textContent = mediaId;
-      document.getElementById("sel_status").textContent = status || "-";
+    document.getElementById("sel_id").textContent = mediaId;
+    document.getElementById("sel_status").textContent = status || "-";
 
-      const img = document.getElementById("preview_img");
-      img.src = imgUrl;
+    const img = document.getElementById("preview_img");
+    img.src = imgUrl;
 
-      const form = document.getElementById("decide_form");
-      form.action = "{{ url_for('decisions.decide_one', media_id=0) }}".replace("0", mediaId);
+    const form = document.getElementById("decide_form");
+    form.action = "{{ url_for('decisions.decide_one', media_id=0) }}".replace("0", mediaId);
 
-      document.getElementById("btn_accept").disabled = false;
-      document.getElementById("btn_reject").disabled = false;
+    document.getElementById("btn_accept").disabled = false;
+    document.getElementById("btn_reject").disabled = false;
 
-      // Prefill reason field with existing reason for convenience
-      document.getElementById("reason").value = reason || "";
-    }
+    document.getElementById("reason").value = reason || "";
+  }
+
+  const selectAllBulk = document.getElementById("select_all_bulk");
+
+  if (selectAllBulk) {
+    selectAllBulk.addEventListener("change", function () {
+      const checkboxes = document.querySelectorAll(".bulk-checkbox");
+      checkboxes.forEach(cb => {
+        cb.checked = this.checked;
+      });
+    });
+
+    const bulkCheckboxes = document.querySelectorAll(".bulk-checkbox");
+    bulkCheckboxes.forEach(cb => {
+      cb.addEventListener("change", function () {
+        const allChecked = [...bulkCheckboxes].every(x => x.checked);
+        const anyChecked = [...bulkCheckboxes].some(x => x.checked);
+
+        selectAllBulk.checked = allChecked;
+        selectAllBulk.indeterminate = anyChecked && !allChecked;
+      });
+    });
+  }
   </script>
 </body>
 </html>
