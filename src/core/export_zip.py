@@ -19,6 +19,7 @@ from src.utils.watermark import burn_watermark
 
 _VERSION_RE = re.compile(r"^(?P<stem>.+?)(?:_v(?P<v>\d+))?$")
 MY_TZ = ZoneInfo("Asia/Kuala_Lumpur")
+LOGO_PATH = Path(__file__).parent.parent / "assets" / "images" / "Jabil_logo.png"
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -149,7 +150,7 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
             operator_id=operator_id,
             export_ts=export_ts,
             seq=seq,
-            original_name=(media.filename or src.name),
+            original_name=(media.filename or src.name)
         )
 
         dst = staging_dir / export_name
@@ -159,12 +160,10 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
             str(dst),
             uut_serial=uut_serial,
             import_session_id=import_session_id,
-            captured_at=media.captured_at,
+            captured_at=media.captured_at
         )
 
         dt = datetime.now(timezone.utc)
-
-        # If DB gave you a naive datetime, assume it is UTC (or fix ingestion properly below)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
 
@@ -173,7 +172,8 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
         burn_watermark(
             str(dst),
             uut_serial=uut_serial,
-            dt_text=dt_text
+            dt_text=dt_text,
+            logo_path= LOGO_PATH
         )
 
         size = dst.stat().st_size
