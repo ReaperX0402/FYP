@@ -19,7 +19,7 @@ def export_page(import_session_id: int):
         sess = db.get(ImportSession, import_session_id)
         if not sess:
             flash("Import session not found.", "error")
-            return redirect(url_for("ingestion.dashboard"))
+            return redirect(url_for("sessions.dashboard"))
 
         total = db.scalar(
             select(func.count()).select_from(Media)

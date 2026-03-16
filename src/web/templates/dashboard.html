@@ -30,35 +30,181 @@
     {% endwith %}
 
     <section class="panel">
-      <h3>Recent Import Sessions</h3>
+      <div class="section-head">
+        <h3>Recent Import Sessions</h3>
+        <span class="section-subtext">Only running sessions should be shown here.</span>
+      </div>
 
-      <table>
-        <tr>
-          <th>Session ID</th>
-          <th>UUT Serial</th>
-          <th>Operator</th>
-          <th>Actions</th>
-        </tr>
-        {% for s in sessions %}
-        <tr>
-          <td>{{ s.import_session_id }}</td>
-          <td>{{ s.uut_serial }}</td>
-          <td>{{ s.operator_id }}</td>
-          <td class="actions-cell">
-            <a href="{{ url_for('ingestion.ingest_page', import_session_id=s.import_session_id) }}">Ingest</a>
-            <a href="{{ url_for('decisions.decide_page', import_session_id=s.import_session_id) }}">Decide</a>
-            <a href="{{ url_for('exports.export_page', import_session_id=s.import_session_id) }}">Export</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>UUT Serial</th>
+              <th>Operator</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in sessions %}
+            <tr>
+              <td>{{ s.import_session_id }}</td>
+              <td>{{ s.uut_serial }}</td>
+              <td>{{ s.operator_id }}</td>
+              <td class="actions-cell">
+                <a class="action-link" href="{{ url_for('ingestion.ingest_page', import_session_id=s.import_session_id) }}">Ingest</a>
+                <a class="action-link" href="{{ url_for('decisions.decide_page', import_session_id=s.import_session_id) }}">Decide</a>
+                <a class="action-link" href="{{ url_for('exports.export_page', import_session_id=s.import_session_id) }}">Export</a>
+
+                <button
+                  type="button"
+                  class="primary-btn"
+                  onclick="openCompleteModal('{{ s.import_session_id }}', '{{ s.uut_serial|e }}')">
+                  Complete Session
+                </button>
+
+                <button
+                  type="button"
+                  class="danger-btn"
+                  onclick="openCancelModal('{{ s.import_session_id }}', '{{ s.uut_serial|e }}')">
+                  Cancel Session
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if not sessions %}
+          <div class="empty-state">
+            <p>No running sessions available.</p>
+          </div>
+        {% endif %}
+      </div>
     </section>
 
     <nav class="quick-links">
       <a href="{{ url_for('ingestion.new_job_page') }}">Create Job</a>
-      <a href="{{ url_for('ingestion.new_session_page') }}">Create Import Session</a>
+      <a href="{{ url_for('sessions.new_session_page') }}">Create Import Session</a>
       <a href="{{ url_for('ingestion.jobs_page') }}">Manage Jobs</a>
+      <a href="{{ url_for('sessions.archive_page') }}">Archive Sessions</a>
     </nav>
   </main>
+
+  <!-- COMPLETE SESSION DIALOG -->
+  <dialog id="completeSessionDialog" class="confirm-dialog">
+    <form id="completeSessionForm" method="post" class="dialog-card">
+      <div class="dialog-head">
+        <h3>Complete Session?</h3>
+      </div>
+
+      <div class="dialog-body">
+        <p id="completeSessionText"></p>
+
+        <div class="warning-box warning-box-complete">
+          <strong>Warning:</strong>
+          <ul>
+            <li>The folder <code id="completeSessionFolder">data/incoming/session_&lt;SESSION_ID&gt;</code> will be permanently deleted.</li>
+            <li>Media rows will remain for dedupe protection.</li>
+            <li>The session status will be changed from <code>running</code> to <code>completed</code>.</li>
+            <li>You should only do this after all required changes and exports are done.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="secondary-btn" onclick="closeCompleteModal()">Keep Session Open</button>
+        <button type="submit" class="primary-btn">Confirm Complete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- CANCEL SESSION DIALOG -->
+  <dialog id="cancelSessionDialog" class="confirm-dialog">
+    <form id="cancelSessionForm" method="post" class="dialog-card">
+      <div class="dialog-head">
+        <h3>Cancel Session?</h3>
+      </div>
+
+      <div class="dialog-body">
+        <p id="cancelSessionText"></p>
+
+        <div class="warning-box">
+          <strong>Warning:</strong>
+          <ul>
+            <li>The folder <code id="cancelSessionFolder">data/incoming/session_&lt;SESSION_ID&gt;</code> will be permanently deleted.</li>
+            <li>Media rows will remain for dedupe protection.</li>
+            <li>The session status will be changed from <code>running</code> to <code>failed</code>.</li>
+            <li>This action cannot be undone.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="secondary-btn" onclick="closeCancelModal()">Keep Session</button>
+        <button type="submit" class="danger-btn">Confirm Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    function openCompleteModal(sessionId, uutSerial) {
+      const dialog = document.getElementById("completeSessionDialog");
+      const form = document.getElementById("completeSessionForm");
+      const text = document.getElementById("completeSessionText");
+      const folder = document.getElementById("completeSessionFolder");
+
+      form.action = `/sessions/${sessionId}/complete`;
+      text.textContent =
+        `You are about to complete Session ${sessionId} for UUT ${uutSerial}. ` +
+        `The working folder will be removed and the session will no longer appear on the dashboard.`;
+      folder.textContent = `data/incoming/session_${sessionId}`;
+
+      dialog.showModal();
+    }
+
+    function closeCompleteModal() {
+      document.getElementById("completeSessionDialog").close();
+    }
+
+    function openCancelModal(sessionId, uutSerial) {
+      const dialog = document.getElementById("cancelSessionDialog");
+      const form = document.getElementById("cancelSessionForm");
+      const text = document.getElementById("cancelSessionText");
+      const folder = document.getElementById("cancelSessionFolder");
+
+      form.action = `/sessions/${sessionId}/cancel`;
+      text.textContent =
+        `You are about to cancel Session ${sessionId} for UUT ${uutSerial}. ` +
+        `The working folder will be permanently removed.`;
+      folder.textContent = `data/incoming/session_${sessionId}`;
+
+      dialog.showModal();
+    }
+
+    function closeCancelModal() {
+      document.getElementById("cancelSessionDialog").close();
+    }
+
+    function bindBackdropClose(dialogId) {
+      const dialog = document.getElementById(dialogId);
+
+      dialog.addEventListener("click", function (event) {
+        const rect = this.querySelector(".dialog-card").getBoundingClientRect();
+        const clickedInDialog =
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width;
+
+        if (!clickedInDialog) {
+          this.close();
+        }
+      });
+    }
+
+    bindBackdropClose("completeSessionDialog");
+    bindBackdropClose("cancelSessionDialog");
+  </script>
 </body>
 </html>

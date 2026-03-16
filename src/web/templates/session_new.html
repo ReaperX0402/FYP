@@ -29,9 +29,9 @@
           <p><b>No open jobs found.</b> Create a Job first.</p>
           <a href="{{ url_for('ingestion.new_job_page') }}">Create Job</a>
         </div>
-        <a class="back-link" href="{{ url_for('ingestion.dashboard') }}">← Back to Dashboard</a>
+        <a class="back-link" href="{{ url_for('sessions.dashboard') }}">← Back to Dashboard</a>
       {% else %}
-        <form class="form-stack" method="post" action="{{ url_for('ingestion.create_session') }}">
+        <form class="form-stack" method="post" action="{{ url_for('sessions.create_session') }}">
           <div class="field-group">
             <label for="job_id">Job:</label>
             <select id="job_id" name="job_id" required>
@@ -50,7 +50,7 @@
           <button type="submit">Create Session</button>
         </form>
 
-        <a class="back-link" href="{{ url_for('ingestion.dashboard') }}">← Back to Dashboard</a>
+        <a class="back-link" href="{{ url_for('sessions.dashboard') }}">← Back to Dashboard</a>
       {% endif %}
     </section>
   </main>

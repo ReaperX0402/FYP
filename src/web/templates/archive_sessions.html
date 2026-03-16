@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archive Sessions</title>
+  <style>{% include 'css/archive_sessions.css' %}</style>
+</head>
+<body>
+  <main class="page-shell">
+    <header class="topbar">
+      <div>
+        <h2>Archive Sessions</h2>
+        <p>Read-only archive for completed and cancelled sessions.</p>
+      </div>
+      <div class="user-meta">
+        <span>Logged in as: <b>{{ operator_id }}</b></span>
+        <a href="{{ url_for('sessions.dashboard') }}">Back to Dashboard</a>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for cat, msg in messages %}
+            <li class="flash-item flash-{{ cat }}"><b>{{ cat }}</b>: {{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <section class="panel">
+      <div class="section-head">
+        <h3>Completed Sessions</h3>
+        <span class="section-subtext">Finalized sessions kept for viewing and follow-up work.</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>UUT Serial</th>
+              <th>Operator</th>
+              <th>Purpose</th>
+              <th>Total</th>
+              <th>Accepted</th>
+              <th>Rejected</th>
+              <th>Archive Folder</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in completed_sessions %}
+            <tr>
+              <td>{{ row.session.import_session_id }}</td>
+              <td>{{ row.session.uut_serial }}</td>
+              <td>{{ row.session.operator_id }}</td>
+              <td>{{ row.session.session_purpose }}</td>
+              <td>{{ row.total_count }}</td>
+              <td>{{ row.accepted_count }}</td>
+              <td>{{ row.rejected_count }}</td>
+              <td>
+                {% if row.archive_exists %}
+                  <span class="status-badge status-ok">{{ row.archive_dir_name }}</span>
+                {% else %}
+                  <span class="status-badge status-missing">Missing</span>
+                {% endif %}
+              </td>
+              <td class="actions-cell">
+                <form method="post" action="{{ url_for('sessions.amend_session', import_session_id=row.session.import_session_id) }}">
+                    <button type="submit" class="warning-btn">Amend</button>
+                </form>
+
+                <form method="post" action="{{ url_for('sessions.create_retake_session', import_session_id=row.session.import_session_id) }}">
+                  <button type="submit" class="primary-btn">Retake</button>
+                </form>
+
+                <form method="post" action="{{ url_for('sessions.create_rework_session', import_session_id=row.session.import_session_id) }}">
+                  <button type="submit" class="secondary-btn">Rework</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+
+            {% if not completed_sessions %}
+            <tr>
+              <td colspan="9" class="empty-cell">No completed sessions found.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel panel-gap">
+      <div class="section-head">
+        <h3>Cancelled Sessions</h3>
+        <span class="section-subtext">Aborted sessions retained for traceability.</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>UUT Serial</th>
+              <th>Operator</th>
+              <th>Purpose</th>
+              <th>Total</th>
+              <th>Accepted</th>
+              <th>Rejected</th>
+              <th>Archive Folder</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in cancelled_sessions %}
+            <tr>
+              <td>{{ row.session.import_session_id }}</td>
+              <td>{{ row.session.uut_serial }}</td>
+              <td>{{ row.session.operator_id }}</td>
+              <td>{{ row.session.session_purpose }}</td>
+              <td>{{ row.total_count }}</td>
+              <td>{{ row.accepted_count }}</td>
+              <td>{{ row.rejected_count }}</td>
+              <td>
+                {% if row.archive_exists %}
+                  <span class="status-badge status-ok">{{ row.archive_dir_name }}</span>
+                {% else %}
+                  <span class="status-badge status-missing">Missing</span>
+                {% endif %}
+              </td>
+              <td class="actions-cell">
+                <form method="post" action="{{ url_for('sessions.create_retake_session', import_session_id=row.session.import_session_id) }}">
+                  <button type="submit" class="primary-btn">New Session</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+
+            {% if not cancelled_sessions %}
+            <tr>
+              <td colspan="9" class="empty-cell">No cancelled sessions found.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <nav class="quick-links">
+      <a href="{{ url_for('sessions.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('sessions.new_session_page') }}">Create Import Session</a>
+    </nav>
+  </main>
+</body>
+</html>

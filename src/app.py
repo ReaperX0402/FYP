@@ -9,6 +9,7 @@ from src.web.routes.decisions import bp as decisions_bp
 from src.web.routes.ingestion import bp as ingestion_bp
 from src.web.routes.auth import bp as auth_bp
 from src.web.routes.exports import bp as exports_bp
+from src.web.routes.sessions import bp as sessions_bp
 
 def create_app() -> Flask:
     project_root = Path(__file__).resolve().parent.parent
@@ -26,6 +27,7 @@ def create_app() -> Flask:
     app.register_blueprint(ingestion_bp)
     app.register_blueprint(decisions_bp)
     app.register_blueprint(exports_bp)
+    app.register_blueprint(sessions_bp)
 
     @app.after_request
     def add_no_cache_headers(response):
