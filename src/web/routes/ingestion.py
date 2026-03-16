@@ -7,21 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from src.db.session import SessionLocal
 from src.db.models import ImportSession, Media, Jobs
 from src.core.ingestion_service import run_ingestion_for_session
-from src.web.auth import login_required, get_current_operator_id
+from src.web.auth import login_required
 
 bp = Blueprint("ingestion", __name__)
-
-
-@bp.get("/dashboard")
-@login_required
-def dashboard():
-    operator_id = get_current_operator_id()
-    with SessionLocal() as db:
-        sessions = db.scalars(
-            select(ImportSession).order_by(ImportSession.import_session_id.desc()).limit(20)
-        ).all()
-    return render_template("dashboard.html", operator_id=operator_id, sessions=sessions)
-
 
 @bp.get("/sessions/<int:import_session_id>/ingest")
 @login_required
@@ -30,7 +18,7 @@ def ingest_page(import_session_id: int):
         session_row = db.get(ImportSession, import_session_id)
         if not session_row:
             flash("Import session not found", "error")
-            return redirect(url_for("ingestion.dashboard"))
+            return redirect(url_for("sessions.dashboard"))
 
         media_count = db.query(Media).filter(
             Media.import_session_id == import_session_id
@@ -59,73 +47,6 @@ def run_ingest(import_session_id: int):
 
     return redirect(url_for("ingestion.ingest_page", import_session_id=import_session_id))
 
-@bp.get("/sessions/new")
-@login_required
-def new_session_page():
-    operator_id = get_current_operator_id()
-
-    with SessionLocal() as db:
-        stmt = select(Jobs).order_by(Jobs.job_id.desc())
-        jobs = db.scalars(stmt).all()
-
-    # If your Jobs has a status field, filter to open only.
-    # If not, show all jobs.
-    open_jobs = []
-    for j in jobs:
-        if hasattr(j, "status"):
-            if (j.status or "").lower() not in ("closed", "ended"):
-                open_jobs.append(j)
-        else:
-            open_jobs.append(j)
-
-    return render_template("session_new.html", operator_id=operator_id, jobs=open_jobs)
-
-
-@bp.post("/sessions/new")
-@login_required
-def create_session():
-    uut_serial = (request.form.get("uut_serial") or "").strip()
-    job_id = (request.form.get("job_id") or "").strip()
-    operator_id = get_current_operator_id()
-
-    if not job_id:
-        flash("Job is required.", "error")
-        return redirect(url_for("ingestion.new_session_page"))
-
-    if not uut_serial:
-        flash("UUT Serial is required.", "error")
-        return redirect(url_for("ingestion.new_session_page"))
-
-    with SessionLocal() as db:
-        # Validate job exists
-        job = db.get(Jobs, job_id)
-        if not job:
-            flash("Selected job does not exist.", "error")
-            return redirect(url_for("ingestion.new_session_page"))
-
-        # Optional: block closed jobs (if status exists)
-        if hasattr(job, "status") and (job.status or "").lower() in ("closed", "ended"):
-            flash("Cannot create session under a closed job.", "error")
-            return redirect(url_for("ingestion.new_session_page"))
-
-        # Create session
-        new_session = ImportSession(
-            job_id=job_id,
-            uut_serial=uut_serial,
-            operator_id=operator_id,
-        )
-
-        # Optional: if your ImportSession has status and no default, set it
-        if hasattr(new_session, "status") and not getattr(new_session, "status", None):
-            new_session.status = "running"
-
-        db.add(new_session)
-        db.commit()
-        db.refresh(new_session)
-
-    flash(f"Import Session {new_session.import_session_id} created under Job {job_id}.", "success")
-    return redirect(url_for("ingestion.ingest_page", import_session_id=new_session.import_session_id))
-    
 @bp.get("/jobs/new")
 @login_required
 def new_job_page():
@@ -147,7 +68,7 @@ def create_job():
             db.add(job)
             db.commit()
             flash(f"Job created: {job_id}", "success")
-            return redirect(url_for("ingestion.dashboard"))
+            return redirect(url_for("sessions.dashboard"))
 
         except IntegrityError as e:
             db.rollback()

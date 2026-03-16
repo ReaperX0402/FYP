@@ -11,14 +11,14 @@ bp = Blueprint("auth", __name__)
 
 @bp.get("/login")
 def login():
-    next_url = request.args.get("next") or url_for("ingestion.dashboard")
+    next_url = request.args.get("next") or url_for("sessions.dashboard")
     return render_template("login.html", next_url=next_url)
 
 
 @bp.post("/login")
 def login_post():
     operator_id = (request.form.get("operator_id") or "").strip()
-    next_url = (request.form.get("next_url") or "").strip() or url_for("ingestion.dashboard")
+    next_url = (request.form.get("next_url") or "").strip() or url_for("sessions.dashboard")
 
     if not operator_id:
         flash("Operator ID is required.", "error")
