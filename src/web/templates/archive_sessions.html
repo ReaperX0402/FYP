@@ -15,7 +15,7 @@
       </div>
       <div class="user-meta">
         <span>Logged in as: <b>{{ operator_id }}</b></span>
-        <a href="{{ url_for('sessions.dashboard') }}">Back to Dashboard</a>
+        <a href="{{ url_for('sessions.dashboard') }}">← Back to Dashboard</a>
       </div>
     </header>
 
@@ -150,7 +150,6 @@
     </section>
 
     <nav class="quick-links">
-      <a href="{{ url_for('sessions.dashboard') }}">Dashboard</a>
       <a href="{{ url_for('sessions.new_session_page') }}">Create Import Session</a>
     </nav>
   </main>
