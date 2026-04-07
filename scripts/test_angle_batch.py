@@ -4,7 +4,7 @@ from src.ai_model.angle_classifier import AngleClassifier
 
 
 def main() -> None:
-    model_path = Path("src/ai_model/best_angle_classifier.pt")
+    model_path = Path("src/ai_model/best_angle_classifier_model_2.pt")
     image_dir = Path("data/test_batch")
 
     classifier = AngleClassifier(model_path)

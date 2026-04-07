@@ -1,0 +1,92 @@
+{
+  "import_session_id": 10,
+  "uut_serial": "UUT_01234",
+  "model": {
+    "name": "angle_classifier",
+    "version": "v1",
+    "path": "src\\ai_model\\best_angle_classifier_2.pt"
+  },
+  "generated_at": "2026-04-07T21:22:33.458887+08:00",
+  "required_angles": [
+    "back",
+    "front",
+    "left",
+    "right",
+    "top"
+  ],
+  "session_summary": {
+    "detected_object": "bottle",
+    "captured_angles": [
+      "front",
+      "top"
+    ],
+    "missing_angles": [
+      "back",
+      "left",
+      "right"
+    ],
+    "total_media": 6
+  },
+  "media_results": [
+    {
+      "media_id": 32,
+      "filename": "P3180020.JPG",
+      "predicted_class": "bottle_top",
+      "predicted_object": "bottle",
+      "predicted_angle": "top",
+      "confidence": 0.656044,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 33,
+      "filename": "P3180021.JPG",
+      "predicted_class": "bottle_top",
+      "predicted_object": "bottle",
+      "predicted_angle": "top",
+      "confidence": 0.982221,
+      "duplicate_warning": true,
+      "error": null
+    },
+    {
+      "media_id": 34,
+      "filename": "P3180022.JPG",
+      "predicted_class": "laptop_top",
+      "predicted_object": "laptop",
+      "predicted_angle": "top",
+      "confidence": 0.796794,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 35,
+      "filename": "P3180023.JPG",
+      "predicted_class": "laptop_top",
+      "predicted_object": "laptop",
+      "predicted_angle": "top",
+      "confidence": 0.935733,
+      "duplicate_warning": true,
+      "error": null
+    },
+    {
+      "media_id": 36,
+      "filename": "P3180024.JPG",
+      "predicted_class": "laptop_top",
+      "predicted_object": "laptop",
+      "predicted_angle": "top",
+      "confidence": 0.443558,
+      "duplicate_warning": true,
+      "error": null
+    },
+    {
+      "media_id": 37,
+      "filename": "P3180025.JPG",
+      "predicted_class": "bottle_front",
+      "predicted_object": "bottle",
+      "predicted_angle": "front",
+      "confidence": 0.311482,
+      "duplicate_warning": false,
+      "error": null
+    }
+  ]
+}

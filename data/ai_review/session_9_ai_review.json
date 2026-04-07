@@ -1,0 +1,78 @@
+{
+  "import_session_id": 9,
+  "uut_serial": "UUT_0123",
+  "model": {
+    "name": "angle_classifier",
+    "version": "v1",
+    "path": "src\\ai_model\\best_angle_classifier_2.pt"
+  },
+  "generated_at": "2026-04-07T22:57:03.450714+08:00",
+  "required_angles": [
+    "back",
+    "front",
+    "left",
+    "right",
+    "top"
+  ],
+  "session_summary": {
+    "target_object": "laptop",
+    "detected_object": "laptop",
+    "captured_angles": [
+      "right",
+      "top"
+    ],
+    "missing_angles": [
+      "back",
+      "front",
+      "left"
+    ],
+    "total_media": 3
+  },
+  "media_results": [
+    {
+      "media_id": 29,
+      "filename": "P3170017.JPG",
+      "predicted_class": "box_top",
+      "predicted_object": "box",
+      "predicted_angle": "top",
+      "confidence": 0.532678,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 29,
+      "error": "cannot access local variable 'detected_object' where it is not associated with a value",
+      "duplicate_warning": false
+    },
+    {
+      "media_id": 30,
+      "filename": "P3170018.JPG",
+      "predicted_class": "laptop_top",
+      "predicted_object": "laptop",
+      "predicted_angle": "top",
+      "confidence": 0.99893,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 30,
+      "error": "cannot access local variable 'detected_object' where it is not associated with a value",
+      "duplicate_warning": false
+    },
+    {
+      "media_id": 31,
+      "filename": "P3170019.JPG",
+      "predicted_class": "laptop_right",
+      "predicted_object": "laptop",
+      "predicted_angle": "right",
+      "confidence": 0.649392,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 31,
+      "error": "cannot access local variable 'detected_object' where it is not associated with a value",
+      "duplicate_warning": false
+    }
+  ]
+}

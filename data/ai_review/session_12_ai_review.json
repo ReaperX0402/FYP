@@ -1,0 +1,99 @@
+{
+  "import_session_id": 12,
+  "uut_serial": "UUT_SN_23456",
+  "model": {
+    "name": "angle_classifier",
+    "version": "v1",
+    "path": "src\\ai_model\\best_angle_classifier_2.pt"
+  },
+  "generated_at": "2026-04-07T23:35:08.695365+08:00",
+  "required_angles": [
+    "back",
+    "front",
+    "left",
+    "right",
+    "top"
+  ],
+  "session_summary": {
+    "target_object": "bottle",
+    "detected_object": "bottle",
+    "captured_angles": [
+      "front",
+      "right"
+    ],
+    "missing_angles": [
+      "back",
+      "left",
+      "top"
+    ],
+    "total_media": 6
+  },
+  "media_results": [
+    {
+      "media_id": 44,
+      "filename": "P4070032.JPG",
+      "predicted_class": "bottle_right",
+      "predicted_object": "bottle",
+      "predicted_angle": "right",
+      "confidence": 0.926722,
+      "duplicate_warning": false,
+      "error": null,
+      "target_mismatch_warning": false
+    },
+    {
+      "media_id": 45,
+      "filename": "P4070033.JPG",
+      "predicted_class": "bottle_front",
+      "predicted_object": "bottle",
+      "predicted_angle": "front",
+      "confidence": 0.998779,
+      "duplicate_warning": false,
+      "error": null,
+      "target_mismatch_warning": false
+    },
+    {
+      "media_id": 46,
+      "filename": "P4070034.JPG",
+      "predicted_class": "bottle_right",
+      "predicted_object": "bottle",
+      "predicted_angle": "right",
+      "confidence": 0.384599,
+      "duplicate_warning": true,
+      "error": null,
+      "target_mismatch_warning": false
+    },
+    {
+      "media_id": 47,
+      "filename": "P4070035.JPG",
+      "predicted_class": "laptop_front",
+      "predicted_object": "laptop",
+      "predicted_angle": "front",
+      "confidence": 0.403182,
+      "duplicate_warning": false,
+      "error": null,
+      "target_mismatch_warning": true
+    },
+    {
+      "media_id": 48,
+      "filename": "P4070036.JPG",
+      "predicted_class": "box_back",
+      "predicted_object": "box",
+      "predicted_angle": "back",
+      "confidence": 0.347385,
+      "duplicate_warning": false,
+      "error": null,
+      "target_mismatch_warning": true
+    },
+    {
+      "media_id": 50,
+      "filename": "P4070037.JPG",
+      "predicted_class": "laptop_right",
+      "predicted_object": "laptop",
+      "predicted_angle": "right",
+      "confidence": 0.258117,
+      "duplicate_warning": false,
+      "error": null,
+      "target_mismatch_warning": true
+    }
+  ]
+}

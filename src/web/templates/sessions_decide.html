@@ -13,7 +13,7 @@
         <div>
           <a href="{{ url_for('sessions.dashboard') }}">← Back to Dashboard</a>
           <h2>Decision — Import Session {{ import_session_id }}</h2>
-          <p class="subtle">Click a thumbnail to inspect. Decide per image. Bulk still available below.</p>
+          <p class="subtle">Click a thumbnail to inspect. Decide per image. Bulk is available below.</p>
         </div>
         <a href="{{ url_for('exports.export_page', import_session_id=import_session_id) }}">Go to Export Page →</a>
       </header>
@@ -28,6 +28,65 @@
         {% endif %}
       {% endwith %}
 
+      <!--
+        AI summary is shown at page level because:
+        - the manifest is session-scoped
+        - missing angles are meaningful at session level
+        - this keeps advisory data separate from operator decision controls
+      -->
+      {% if ai_error %}
+        <div class="ai-banner ai-banner-error">
+          <b>AI Review:</b> {{ ai_error }}
+        </div>
+      {% elif ai_manifest %}
+        <section class="ai-session-summary">
+          <div class="ai-summary-header">
+            <h3>AI Review Summary</h3>
+            <p class="subtle">
+              Advisory only. Operator decision remains the final authority.
+            </p>
+          </div>
+
+          <div class="ai-summary-grid">
+            <div class="ai-stat-card">
+              <div class="ai-stat-label">Detected object</div>
+              <div class="ai-stat-value">
+                {{ ai_manifest.session_summary.detected_object or 'Unknown' }}
+              </div>
+            </div>
+
+            <div class="ai-stat-card">
+              <div class="ai-stat-label">Angles covered</div>
+              <div class="ai-stat-value">
+                {% if ai_manifest.session_summary.captured_angles %}
+                  {{ ai_manifest.session_summary.captured_angles | join(', ') }}
+                {% else %}
+                  None
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="ai-stat-card">
+              <div class="ai-stat-label">Missing angles</div>
+              <div class="ai-stat-value">
+                {% if ai_manifest.session_summary.missing_angles %}
+                  {{ ai_manifest.session_summary.missing_angles | join(', ') }}
+                {% else %}
+                  None
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="ai-stat-card">
+              <div class="ai-stat-label">Analyzed media</div>
+              <div class="ai-stat-value">
+                {{ ai_manifest.session_summary.total_media }}
+              </div>
+            </div>
+          </div>
+        </section>
+      {% endif %}
+
       <div class="layout">
         <!-- Gallery -->
         <section class="gallery">
@@ -36,19 +95,53 @@
             <div class="row-title">Accepted / Undecided</div>
             <div class="thumb-strip">
               {% for r in rows if r.decision_status != 'rejected' %}
+                {% set ai = (ai_manifest.media_results | selectattr('media_id', 'equalto', r.media_id) | list | first) if ai_manifest else none %}
                 <button
                   type="button"
                   class="thumb-card {{ 'is-accepted' if r.decision_status=='accepted' else 'is-undecided' }}"
-                  onclick="selectMedia('{{ r.media_id }}', '{{ url_for('decisions.media_file', media_id=r.media_id) }}', '{{ r.decision_status or 'UNDECIDED' }}', `{{ (r.decision_reason or '').replace('`','') }}`)"
+                  onclick='selectMedia(
+                    {{ r.media_id | tojson }},
+                    {{ url_for("decisions.media_file", media_id=r.media_id) | tojson }},
+                    {{ (r.decision_status or "UNDECIDED") | tojson }},
+                    {{ (r.decision_reason or "") | tojson }},
+                    {{ ai | tojson }}
+                  )'
                   title="Media {{ r.media_id }}"
                 >
                   <img class="thumb" src="{{ url_for('decisions.media_file', media_id=r.media_id) }}" loading="lazy" alt="media {{ r.media_id }}">
                   <div class="thumb-meta">
-                    <span class="mono">#{{ r.media_id }}</span>
+                    <div class="thumb-meta-left">
+                      <span class="mono">#{{ r.media_id }}</span>
+
+                      {% if ai %}
+                        <div class="thumb-ai-badges">
+                          {% if ai.confidence is not none %}
+                            {% set conf = ai.confidence %}
+                            <span class="pill
+                              {{ 'pill-good' if conf >= 0.85 else ('pill-mid' if conf >= 0.5 else 'pill-bad') }}">
+                              Conf {{ '%.2f'|format(conf) }}
+                            </span>
+                          {% endif %}
+
+                          {% if ai.duplicate_warning %}
+                            <span class="pill pill-warn">Duplicate</span>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
                     <span class="pill {{ 'pill-accepted' if r.decision_status=='accepted' else 'pill-undecided' }}">
                       {{ r.decision_status or 'UNDECIDED' }}
                     </span>
                   </div>
+
+                  {% if ai and ai.target_mismatch_warning %}
+                    <div class="thumb-warning-text">
+                      Possible non-target UUT image
+                    </div>
+                  {% else %}
+                    <div class="thumb-warning-text"></div>
+                  {% endif %}
+
                 </button>
               {% endfor %}
             </div>
@@ -59,17 +152,51 @@
             <div class="row-title">Rejected</div>
             <div class="thumb-strip">
               {% for r in rows if r.decision_status == 'rejected' %}
+                {% set ai = (ai_manifest.media_results | selectattr('media_id', 'equalto', r.media_id) | list | first) if ai_manifest else none %}
                 <button
                   type="button"
                   class="thumb-card is-rejected"
-                  onclick="selectMedia('{{ r.media_id }}', '{{ url_for('decisions.media_file', media_id=r.media_id) }}', '{{ r.decision_status }}', `{{ (r.decision_reason or '').replace('`','') }}`)"
+                  onclick='selectMedia(
+                    {{ r.media_id | tojson }},
+                    {{ url_for("decisions.media_file", media_id=r.media_id) | tojson }},
+                    {{ r.decision_status | tojson }},
+                    {{ (r.decision_reason or "") | tojson }},
+                    {{ ai | tojson }}
+                  )'
                   title="Media {{ r.media_id }}"
                 >
                   <img class="thumb" src="{{ url_for('decisions.media_file', media_id=r.media_id) }}" loading="lazy" alt="media {{ r.media_id }}">
                   <div class="thumb-meta">
-                    <span class="mono">#{{ r.media_id }}</span>
+                    <div class="thumb-meta-left">
+                      <span class="mono">#{{ r.media_id }}</span>
+
+                      {% if ai %}
+                        <div class="thumb-ai-badges">
+                          {% if ai.confidence is not none %}
+                            {% set conf = ai.confidence %}
+                            <span class="pill
+                              {{ 'pill-good' if conf >= 0.85 else ('pill-mid' if conf >= 0.5 else 'pill-bad') }}">
+                              Conf {{ '%.2f'|format(conf) }}
+                            </span>
+                          {% endif %}
+
+                          {% if ai.duplicate_warning %}
+                            <span class="pill pill-warn">Duplicate</span>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    </div>
+
                     <span class="pill pill-rejected">rejected</span>
                   </div>
+
+                  {% if ai and ai.target_mismatch_warning %}
+                    <div class="thumb-warning-text">
+                      Possible non-target UUT image
+                    </div>
+                  {% else %}
+                    <div class="thumb-warning-text"></div>
+                  {% endif %}
                 </button>
               {% endfor %}
             </div>
@@ -89,6 +216,57 @@
           <div class="preview">
             <img id="preview_img" alt="preview" />
           </div>
+
+          <!--
+            AI detail panel is image-scoped.
+            It updates whenever user clicks another thumbnail.
+          -->
+          <section class="ai-image-panel">
+            <h4>AI Image Review</h4>
+
+            <div id="ai_detail_empty" class="subtle">
+              Select an image to view AI prediction.
+            </div>
+
+            <div id="ai_detail_body" class="ai-detail-grid" style="display:none;">
+
+              <div class="ai-detail-row">
+                <div class="ai-detail-label">Class</div>
+                <div id="ai_predicted_class" class="ai-detail-value mono">-</div>
+              </div>
+
+              <div class="ai-detail-row">
+                <div class="ai-detail-label">Object</div>
+                <div id="ai_predicted_object" class="ai-detail-value">-</div>
+              </div>
+
+              <div class="ai-detail-row">
+                <div class="ai-detail-label">Angle</div>
+                <div id="ai_predicted_angle" class="ai-detail-value">-</div>
+              </div>
+
+              <div class="ai-detail-row">
+                <div class="ai-detail-label">Confidence</div>
+                <div id="ai_confidence" class="ai-detail-value ai-pill ai-pill-neutral">-</div>
+              </div>
+
+              <div class="ai-detail-row">
+                <div class="ai-detail-label">Duplicate</div>
+                <div id="ai_duplicate" class="ai-detail-value ai-pill">-</div>
+              </div>
+
+              <div class="ai-detail-row">
+                <div class="ai-detail-label">Status</div>
+                <div id="ai_status" class="ai-detail-value">-</div>
+              </div>
+
+              <div class="ai-detail-row ai-detail-row-block">
+                <div class="ai-detail-label">Error</div>
+                <div id="ai_error_text" class="ai-detail-value">-</div>
+              </div>
+
+            </div>
+          </section>
 
           <form id="decide_form" method="post">
             <input type="hidden" name="import_session_id" value="{{ import_session_id }}">
@@ -150,43 +328,105 @@
   </main>
 
   <script>
-    function selectMedia(mediaId, imgUrl, status, reason) {
-    document.getElementById("sel_id").textContent = mediaId;
-    document.getElementById("sel_status").textContent = status || "-";
+    /**
+     * Render selected media in inspector and populate AI detail panel.
+     *
+     * IMPORTANT:
+     * - Operator still makes final decision manually
+     * - AI data shown here is advisory only
+     */
+    function selectMedia(mediaId, imgUrl, status, reason, aiData) {
+      document.getElementById("sel_id").textContent = mediaId;
+      document.getElementById("sel_status").textContent = status || "-";
 
-    const img = document.getElementById("preview_img");
-    img.src = imgUrl;
+      const img = document.getElementById("preview_img");
+      img.src = imgUrl;
 
-    const form = document.getElementById("decide_form");
-    form.action = "{{ url_for('decisions.decide_one', media_id=0) }}".replace("0", mediaId);
+      const form = document.getElementById("decide_form");
+      form.action = "{{ url_for('decisions.decide_one', media_id=0) }}".replace("0", mediaId);
 
-    document.getElementById("btn_accept").disabled = false;
-    document.getElementById("btn_reject").disabled = false;
+      document.getElementById("btn_accept").disabled = false;
+      document.getElementById("btn_reject").disabled = false;
 
-    document.getElementById("reason").value = reason || "";
+      document.getElementById("reason").value = reason || "";
+
+      renderAIDetails(aiData);
+    }
+
+    /**
+     * Fill AI detail panel from manifest result of selected image.
+     */
+    function renderAIDetails(aiData) {
+  const emptyBox = document.getElementById("ai_detail_empty");
+  const bodyBox = document.getElementById("ai_detail_body");
+
+  if (!aiData) {
+    emptyBox.style.display = "block";
+    bodyBox.style.display = "none";
+    return;
   }
 
-  const selectAllBulk = document.getElementById("select_all_bulk");
+  emptyBox.style.display = "none";
+  bodyBox.style.display = "grid";
 
-  if (selectAllBulk) {
-    selectAllBulk.addEventListener("change", function () {
-      const checkboxes = document.querySelectorAll(".bulk-checkbox");
-      checkboxes.forEach(cb => {
-        cb.checked = this.checked;
-      });
-    });
+  document.getElementById("ai_predicted_class").textContent = aiData.predicted_class || "-";
+  document.getElementById("ai_predicted_object").textContent = aiData.predicted_object || "-";
+  document.getElementById("ai_predicted_angle").textContent = aiData.predicted_angle || "-";
 
-    const bulkCheckboxes = document.querySelectorAll(".bulk-checkbox");
-    bulkCheckboxes.forEach(cb => {
-      cb.addEventListener("change", function () {
-        const allChecked = [...bulkCheckboxes].every(x => x.checked);
-        const anyChecked = [...bulkCheckboxes].some(x => x.checked);
+  const confEl = document.getElementById("ai_confidence");
+  if (aiData.confidence !== null && aiData.confidence !== undefined) {
+    const val = Number(aiData.confidence);
+    confEl.textContent = val.toFixed(4);
 
-        selectAllBulk.checked = allChecked;
-        selectAllBulk.indeterminate = anyChecked && !allChecked;
-      });
-    });
+    // Confidence visual grading
+    if (val >= 0.85) {
+      confEl.className = "ai-detail-value ai-pill ai-pill-good";
+    } else if (val >= 0.5) {
+      confEl.className = "ai-detail-value ai-pill ai-pill-mid";
+    } else {
+      confEl.className = "ai-detail-value ai-pill ai-pill-bad";
+    }
+  } else {
+    confEl.textContent = "-";
   }
+
+  const dupEl = document.getElementById("ai_duplicate");
+  if (aiData.duplicate_warning) {
+    dupEl.textContent = "Yes";
+    dupEl.className = "ai-detail-value ai-pill ai-pill-warn";
+  } else {
+    dupEl.textContent = "No";
+    dupEl.className = "ai-detail-value ai-pill ai-pill-neutral";
+  }
+
+  document.getElementById("ai_status").textContent =
+    aiData.error ? "Failed" : "OK";
+
+  document.getElementById("ai_error_text").textContent =
+    aiData.error || "-";
+}
+
+    const selectAllBulk = document.getElementById("select_all_bulk");
+
+    if (selectAllBulk) {
+      selectAllBulk.addEventListener("change", function () {
+        const checkboxes = document.querySelectorAll(".bulk-checkbox");
+        checkboxes.forEach(cb => {
+          cb.checked = this.checked;
+        });
+      });
+
+      const bulkCheckboxes = document.querySelectorAll(".bulk-checkbox");
+      bulkCheckboxes.forEach(cb => {
+        cb.addEventListener("change", function () {
+          const allChecked = [...bulkCheckboxes].every(x => x.checked);
+          const anyChecked = [...bulkCheckboxes].some(x => x.checked);
+
+          selectAllBulk.checked = allChecked;
+          selectAllBulk.indeterminate = anyChecked && !allChecked;
+        });
+      });
+    }
   </script>
 </body>
 </html>
