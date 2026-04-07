@@ -1,0 +1,92 @@
+{
+  "import_session_id": 11,
+  "uut_serial": "uut_9876",
+  "model": {
+    "name": "angle_classifier",
+    "version": "v1",
+    "path": "src\\ai_model\\best_angle_classifier_2.pt"
+  },
+  "generated_at": "2026-04-07T21:21:17.774899+08:00",
+  "required_angles": [
+    "back",
+    "front",
+    "left",
+    "right",
+    "top"
+  ],
+  "session_summary": {
+    "detected_object": "laptop",
+    "captured_angles": [
+      "front",
+      "right",
+      "top"
+    ],
+    "missing_angles": [
+      "back",
+      "left"
+    ],
+    "total_media": 6
+  },
+  "media_results": [
+    {
+      "media_id": 38,
+      "filename": "P3250026.JPG",
+      "predicted_class": "laptop_front",
+      "predicted_object": "laptop",
+      "predicted_angle": "front",
+      "confidence": 0.494447,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 39,
+      "filename": "P3250027.JPG",
+      "predicted_class": "laptop_right",
+      "predicted_object": "laptop",
+      "predicted_angle": "right",
+      "confidence": 0.617912,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 40,
+      "filename": "P3250028.JPG",
+      "predicted_class": "laptop_right",
+      "predicted_object": "laptop",
+      "predicted_angle": "right",
+      "confidence": 0.999247,
+      "duplicate_warning": true,
+      "error": null
+    },
+    {
+      "media_id": 41,
+      "filename": "P3250029.JPG",
+      "predicted_class": "laptop_top",
+      "predicted_object": "laptop",
+      "predicted_angle": "top",
+      "confidence": 0.715604,
+      "duplicate_warning": false,
+      "error": null
+    },
+    {
+      "media_id": 42,
+      "filename": "P3250030.JPG",
+      "predicted_class": "laptop_right",
+      "predicted_object": "laptop",
+      "predicted_angle": "right",
+      "confidence": 0.924866,
+      "duplicate_warning": true,
+      "error": null
+    },
+    {
+      "media_id": 43,
+      "filename": "P3250031.JPG",
+      "predicted_class": "laptop_right",
+      "predicted_object": "laptop",
+      "predicted_angle": "right",
+      "confidence": 0.411814,
+      "duplicate_warning": true,
+      "error": null
+    }
+  ]
+}

@@ -8,6 +8,7 @@ from src.db.session import SessionLocal
 from src.db.models import Media, ImportSession, Decisions
 from src.core.decision_service import DecisionService, DecisionServiceError
 from src.web.auth import login_required
+from src.core.ai_review_manifest import AIReviewManifestService, AIReviewManifestError
 
 bp = Blueprint("decisions", __name__)
 
@@ -20,9 +21,29 @@ ALLOWED_MEDIA_ROOTS = [
 @bp.get("/sessions/<int:import_session_id>/decide")
 @login_required
 def decide_page(import_session_id: int):
+    ai_manifest = None
+    ai_manifest_path = None
+    ai_error = None
+
     with SessionLocal() as db:
         rows = DecisionService.list_media_for_session(db, import_session_id)
-    return render_template("sessions_decide.html", import_session_id=import_session_id, rows=rows)
+
+        try:
+            ai_service = AIReviewManifestService()
+            ai_manifest, ai_manifest_path = ai_service.build_and_write_manifest(db, import_session_id)
+        except AIReviewManifestError as e:
+            ai_error = str(e)
+        except Exception as e:
+            ai_error = f"AI review unavailable: {e}"
+
+    return render_template(
+        "sessions_decide.html",
+        import_session_id=import_session_id,
+        rows=rows,
+        ai_manifest=ai_manifest,
+        ai_manifest_path=str(ai_manifest_path) if ai_manifest_path else None,
+        ai_error=ai_error,
+    )
 
 
 @bp.post("/sessions/<int:import_session_id>/decide/bulk")
