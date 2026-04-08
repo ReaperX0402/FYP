@@ -6,7 +6,11 @@
     "version": "v1",
     "path": "src\\ai_model\\best_angle_classifier_2.pt"
   },
-  "generated_at": "2026-04-07T21:22:33.458887+08:00",
+  "blur_detection": {
+    "method": "variance_of_laplacian",
+    "threshold": 100.0
+  },
+  "generated_at": "2026-04-08T13:57:33.592050+08:00",
   "required_angles": [
     "back",
     "front",
@@ -15,6 +19,7 @@
     "top"
   ],
   "session_summary": {
+    "target_object": "bottle",
     "detected_object": "bottle",
     "captured_angles": [
       "front",
@@ -35,8 +40,11 @@
       "predicted_object": "bottle",
       "predicted_angle": "top",
       "confidence": 0.656044,
+      "blur_score": 77.957151,
+      "blur_warning": true,
       "duplicate_warning": false,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 33,
@@ -45,8 +53,11 @@
       "predicted_object": "bottle",
       "predicted_angle": "top",
       "confidence": 0.982221,
+      "blur_score": 87.297447,
+      "blur_warning": true,
       "duplicate_warning": true,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 34,
@@ -55,8 +66,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "top",
       "confidence": 0.796794,
+      "blur_score": 69.265802,
+      "blur_warning": true,
       "duplicate_warning": false,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": true
     },
     {
       "media_id": 35,
@@ -65,8 +79,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "top",
       "confidence": 0.935733,
+      "blur_score": 90.110385,
+      "blur_warning": true,
       "duplicate_warning": true,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": true
     },
     {
       "media_id": 36,
@@ -75,8 +92,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "top",
       "confidence": 0.443558,
+      "blur_score": 89.386739,
+      "blur_warning": true,
       "duplicate_warning": true,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": true
     },
     {
       "media_id": 37,
@@ -85,8 +105,11 @@
       "predicted_object": "bottle",
       "predicted_angle": "front",
       "confidence": 0.311482,
+      "blur_score": 82.419958,
+      "blur_warning": true,
       "duplicate_warning": false,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     }
   ]
 }

@@ -123,6 +123,10 @@
                             </span>
                           {% endif %}
 
+                          {% if ai.blur_warning %}
+                            <span class="pill pill-warn">Blurry</span>
+                          {% endif %}
+
                           {% if ai.duplicate_warning %}
                             <span class="pill pill-warn">Duplicate</span>
                           {% endif %}
@@ -178,6 +182,10 @@
                               {{ 'pill-good' if conf >= 0.85 else ('pill-mid' if conf >= 0.5 else 'pill-bad') }}">
                               Conf {{ '%.2f'|format(conf) }}
                             </span>
+                          {% endif %}
+
+                          {% if ai.blur_warning %}
+                            <span class="pill pill-warn">Blurry</span>
                           {% endif %}
 
                           {% if ai.duplicate_warning %}
@@ -251,6 +259,11 @@
               </div>
 
               <div class="ai-detail-row">
+                <div class="ai-detail-label">Blur</div>
+                <div id="ai_blur" class="ai-detail-value ai-pill ai-pill-neutral">-</div>
+              </div>
+
+              <div class="ai-detail-row">
                 <div class="ai-detail-label">Duplicate</div>
                 <div id="ai_duplicate" class="ai-detail-value ai-pill">-</div>
               </div>
@@ -263,6 +276,11 @@
               <div class="ai-detail-row ai-detail-row-block">
                 <div class="ai-detail-label">Error</div>
                 <div id="ai_error_text" class="ai-detail-value">-</div>
+              </div>
+              
+              <div class="ai-detail-row ai-detail-row-block">
+                <div class="ai-detail-label">AI Suggestions</div>
+                <div id="ai_reasons" class="ai-detail-value">-</div>
               </div>
 
             </div>
@@ -357,54 +375,88 @@
      * Fill AI detail panel from manifest result of selected image.
      */
     function renderAIDetails(aiData) {
-  const emptyBox = document.getElementById("ai_detail_empty");
-  const bodyBox = document.getElementById("ai_detail_body");
+      const emptyBox = document.getElementById("ai_detail_empty");
+      const bodyBox = document.getElementById("ai_detail_body");
 
-  if (!aiData) {
-    emptyBox.style.display = "block";
-    bodyBox.style.display = "none";
-    return;
-  }
+      if (!aiData) {
+        emptyBox.style.display = "block";
+        bodyBox.style.display = "none";
+        document.getElementById("ai_reasons").textContent = "-";
+        return;
+      }
 
-  emptyBox.style.display = "none";
-  bodyBox.style.display = "grid";
+      emptyBox.style.display = "none";
+      bodyBox.style.display = "grid";
 
-  document.getElementById("ai_predicted_class").textContent = aiData.predicted_class || "-";
-  document.getElementById("ai_predicted_object").textContent = aiData.predicted_object || "-";
-  document.getElementById("ai_predicted_angle").textContent = aiData.predicted_angle || "-";
+      document.getElementById("ai_predicted_class").textContent = aiData.predicted_class || "-";
+      document.getElementById("ai_predicted_object").textContent = aiData.predicted_object || "-";
+      document.getElementById("ai_predicted_angle").textContent = aiData.predicted_angle || "-";
 
-  const confEl = document.getElementById("ai_confidence");
-  if (aiData.confidence !== null && aiData.confidence !== undefined) {
-    const val = Number(aiData.confidence);
-    confEl.textContent = val.toFixed(4);
+      const confEl = document.getElementById("ai_confidence");
+      if (aiData.confidence !== null && aiData.confidence !== undefined) {
+        const val = Number(aiData.confidence);
+        confEl.textContent = val.toFixed(4);
 
-    // Confidence visual grading
-    if (val >= 0.85) {
-      confEl.className = "ai-detail-value ai-pill ai-pill-good";
-    } else if (val >= 0.5) {
-      confEl.className = "ai-detail-value ai-pill ai-pill-mid";
-    } else {
-      confEl.className = "ai-detail-value ai-pill ai-pill-bad";
+        // Confidence visual grading
+        if (val >= 0.85) {
+          confEl.className = "ai-detail-value ai-pill ai-pill-good";
+        } else if (val >= 0.5) {
+          confEl.className = "ai-detail-value ai-pill ai-pill-mid";
+        } else {
+          confEl.className = "ai-detail-value ai-pill ai-pill-bad";
+        }
+      } else {
+        confEl.textContent = "-";
+      }
+
+      const blurEl = document.getElementById("ai_blur");
+      if (aiData.blur_score !== null && aiData.blur_score !== undefined) {
+        const blurVal = Number(aiData.blur_score);
+        blurEl.textContent = aiData.blur_warning
+          ? `Blurry (${blurVal.toFixed(2)})`
+          : `Clear (${blurVal.toFixed(2)})`;
+
+        if (blurVal >= 120) {
+          blurEl.className = "ai-detail-value ai-pill ai-pill-good";
+        } else if (blurVal >= 80) {
+          blurEl.className = "ai-detail-value ai-pill ai-pill-mid";
+        } else {
+          blurEl.className = "ai-detail-value ai-pill ai-pill-bad";
+        }
+      } else {
+        blurEl.textContent = "-";
+        blurEl.className = "ai-detail-value ai-pill ai-pill-neutral";
+      }
+
+      const dupEl = document.getElementById("ai_duplicate");
+      if (aiData.duplicate_warning) {
+        dupEl.textContent = "Yes";
+        dupEl.className = "ai-detail-value ai-pill ai-pill-warn";
+      } else {
+        dupEl.textContent = "No";
+        dupEl.className = "ai-detail-value ai-pill ai-pill-neutral";
+      }
+
+      document.getElementById("ai_status").textContent =
+        aiData.error ? "Failed" : "OK";
+
+      document.getElementById("ai_error_text").textContent =
+        aiData.error || "-";
+
+      const reasonsEl = document.getElementById("ai_reasons");
+      if (aiData.ai_reasons && aiData.ai_reasons.length > 0) {
+        reasonsEl.innerHTML = aiData.ai_reasons
+          .map(r => `
+            <div class="ai-reason-item">
+              <span class="ai-reason-bullet">•</span>
+              <span>${r}</span>
+            </div>
+          `)
+          .join("");
+      } else {
+        reasonsEl.textContent = "No issues detected";
+      }
     }
-  } else {
-    confEl.textContent = "-";
-  }
-
-  const dupEl = document.getElementById("ai_duplicate");
-  if (aiData.duplicate_warning) {
-    dupEl.textContent = "Yes";
-    dupEl.className = "ai-detail-value ai-pill ai-pill-warn";
-  } else {
-    dupEl.textContent = "No";
-    dupEl.className = "ai-detail-value ai-pill ai-pill-neutral";
-  }
-
-  document.getElementById("ai_status").textContent =
-    aiData.error ? "Failed" : "OK";
-
-  document.getElementById("ai_error_text").textContent =
-    aiData.error || "-";
-}
 
     const selectAllBulk = document.getElementById("select_all_bulk");
 

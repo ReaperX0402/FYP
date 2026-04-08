@@ -6,7 +6,11 @@
     "version": "v1",
     "path": "src\\ai_model\\best_angle_classifier_2.pt"
   },
-  "generated_at": "2026-04-07T23:35:08.695365+08:00",
+  "blur_detection": {
+    "method": "variance_of_laplacian",
+    "threshold": 42.0
+  },
+  "generated_at": "2026-04-08T15:07:46.657579+08:00",
   "required_angles": [
     "back",
     "front",
@@ -36,9 +40,12 @@
       "predicted_object": "bottle",
       "predicted_angle": "right",
       "confidence": 0.926722,
+      "blur_score": 59.740377,
+      "blur_warning": false,
       "duplicate_warning": false,
+      "target_mismatch_warning": false,
       "error": null,
-      "target_mismatch_warning": false
+      "ai_reasons": []
     },
     {
       "media_id": 45,
@@ -47,9 +54,12 @@
       "predicted_object": "bottle",
       "predicted_angle": "front",
       "confidence": 0.998779,
+      "blur_score": 59.76413,
+      "blur_warning": false,
       "duplicate_warning": false,
+      "target_mismatch_warning": false,
       "error": null,
-      "target_mismatch_warning": false
+      "ai_reasons": []
     },
     {
       "media_id": 46,
@@ -58,9 +68,14 @@
       "predicted_object": "bottle",
       "predicted_angle": "right",
       "confidence": 0.384599,
+      "blur_score": 49.142133,
+      "blur_warning": false,
       "duplicate_warning": true,
+      "target_mismatch_warning": false,
       "error": null,
-      "target_mismatch_warning": false
+      "ai_reasons": [
+        "Duplicate angle detected"
+      ]
     },
     {
       "media_id": 47,
@@ -69,9 +84,14 @@
       "predicted_object": "laptop",
       "predicted_angle": "front",
       "confidence": 0.403182,
+      "blur_score": 170.517604,
+      "blur_warning": false,
       "duplicate_warning": false,
+      "target_mismatch_warning": true,
       "error": null,
-      "target_mismatch_warning": true
+      "ai_reasons": [
+        "Object does not match expected UUT for this session"
+      ]
     },
     {
       "media_id": 48,
@@ -80,9 +100,14 @@
       "predicted_object": "box",
       "predicted_angle": "back",
       "confidence": 0.347385,
+      "blur_score": 166.272899,
+      "blur_warning": false,
       "duplicate_warning": false,
+      "target_mismatch_warning": true,
       "error": null,
-      "target_mismatch_warning": true
+      "ai_reasons": [
+        "Object does not match expected UUT for this session"
+      ]
     },
     {
       "media_id": 50,
@@ -91,9 +116,14 @@
       "predicted_object": "laptop",
       "predicted_angle": "right",
       "confidence": 0.258117,
+      "blur_score": 107.357914,
+      "blur_warning": false,
       "duplicate_warning": false,
+      "target_mismatch_warning": true,
       "error": null,
-      "target_mismatch_warning": true
+      "ai_reasons": [
+        "Object does not match expected UUT for this session"
+      ]
     }
   ]
 }
