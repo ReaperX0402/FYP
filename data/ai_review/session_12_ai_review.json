@@ -10,7 +10,7 @@
     "method": "variance_of_laplacian",
     "threshold": 42.0
   },
-  "generated_at": "2026-04-08T15:07:46.657579+08:00",
+  "generated_at": "2026-04-08T20:31:10.183352+08:00",
   "required_angles": [
     "back",
     "front",
