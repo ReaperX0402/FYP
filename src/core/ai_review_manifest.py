@@ -43,6 +43,7 @@ from sqlalchemy.orm import Session
 
 from src.ai_model.angle_classifier import AngleClassifier
 from src.ai_model.angle_suggester import REQUIRED_ANGLES, suggest_next_angles
+from src.ai_model.blur_detector import BlurDetector
 from src.db.models import ImportSession, Media, Decisions
 
 
@@ -53,6 +54,9 @@ AI_REVIEW_DIR = Path("data/ai_review")
 DEFAULT_MODEL_PATH = Path("src/ai_model/best_angle_classifier_2.pt")
 DEFAULT_MODEL_NAME = "angle_classifier"
 DEFAULT_MODEL_VERSION = "v1"
+
+# Default blur config 
+DEFAULT_BLUR_THRESHOLD = 42
 
 
 @dataclass(frozen=True)
@@ -94,14 +98,15 @@ class AIReviewManifestService:
         model_path: str | Path = DEFAULT_MODEL_PATH,
         model_name: str = DEFAULT_MODEL_NAME,
         model_version: str = DEFAULT_MODEL_VERSION,
+        blur_threshold: float = DEFAULT_BLUR_THRESHOLD,
     ) -> None:
         self.model_path = Path(model_path)
         self.model_name = model_name
         self.model_version = model_version
-
+        self.blur_threshold = float(blur_threshold)
         # Load YOLO classifier once (expensive operation)
         self.classifier = AngleClassifier(self.model_path)
-
+        self.blur_detector = BlurDetector(threshold=self.blur_threshold)
     # -------------------------------------------------------------------------
     # Utility Helpers
     # -------------------------------------------------------------------------
@@ -300,6 +305,7 @@ class AIReviewManifestService:
 
             try:
                 pred = self.classifier.predict(resolved)
+                blur = self.blur_detector.detect(resolved)
 
                 object_counter[pred["object"]] += 1
                 captured_by_object[pred["object"]].add(pred["angle"])
@@ -311,7 +317,10 @@ class AIReviewManifestService:
                     "predicted_object": pred["object"],
                     "predicted_angle": pred["angle"],
                     "confidence": round(float(pred["confidence"]), 6),
+                    "blur_score": blur["blur_score"],
+                    "blur_warning": blur["blur_warning"],
                     "duplicate_warning": False,
+                    "target_mismatch_warning": False,
                     "error": None
                 })
 
@@ -323,6 +332,8 @@ class AIReviewManifestService:
                     "predicted_object": None,
                     "predicted_angle": None,
                     "confidence": None,
+                    "blur_score": None,
+                    "blur_warning": False,
                     "duplicate_warning": False,
                     "target_mismatch_warning": False,
                     "error": str(e)
@@ -349,6 +360,24 @@ class AIReviewManifestService:
             if detected_object else sorted(REQUIRED_ANGLES)
         )
 
+        # Generate human-readable AI reasons
+        for item in media_results:
+            reasons = []
+
+            if item.get("error"):
+                reasons.append("Processing error")
+
+            if item.get("blur_warning"):
+                reasons.append("Retake: image appears blurry (possible motion or focus issue)")
+
+            if item.get("duplicate_warning"):
+                reasons.append("Duplicate angle detected")
+
+            if item.get("target_mismatch_warning"):
+                reasons.append("Object does not match expected UUT for this session")
+
+            item["ai_reasons"] = reasons
+
         return {
             "import_session_id": session_row.import_session_id,
             "uut_serial": session_row.uut_serial,
@@ -356,6 +385,10 @@ class AIReviewManifestService:
                 "name": self.model_name,
                 "version": self.model_version,
                 "path": str(self.model_path),
+            },
+            "blur_detection": {
+                "method": "variance_of_laplacian",
+                "threshold": self.blur_threshold,
             },
             "generated_at": self._now_iso(),
             "required_angles": sorted(REQUIRED_ANGLES),

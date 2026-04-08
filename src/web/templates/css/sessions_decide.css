@@ -87,12 +87,12 @@ body { margin: 0; background: #eef2f7; color: #1f2a37; }
   cursor: pointer;
   text-align: left;
 
-  min-height: 280px;
-  max-height: 280px;
+  min-height: 330px;
+  max-height: 330px;
   box-sizing: border-box;
 
   display: grid;
-  grid-template-rows: 150px 78px 34px; /* image / meta / warning */
+  grid-template-rows: 150px 120px 34px; /* image / meta / warning */
   gap: 8px;
   align-content: start;
 }
@@ -129,6 +129,7 @@ body { margin: 0; background: #eef2f7; color: #1f2a37; }
   grid-auto-rows: min-content;
   gap: 6px;
   justify-items: start;
+  max-width: 100%;  
 }
 
 .thumb-meta > .pill {
@@ -211,6 +212,9 @@ input { border: 1px solid #bfcadd; border-radius: 8px; padding: 10px 12px; }
   background: #f8fbff;
   box-sizing: border-box;
   white-space: nowrap;
+  max-width: 100%;          
+  overflow: hidden;         
+  text-overflow: ellipsis; 
 }
 
 .pill-accepted { 
@@ -403,4 +407,24 @@ input { border: 1px solid #bfcadd; border-radius: 8px; padding: 10px 12px; }
 .ai-pill-neutral {
   background: #f8fafc;
   color: #334155;
+}
+
+.ai-reasons-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ai-reason-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #1f2a37;
+}
+
+.ai-reason-bullet {
+  color: #b45309;
+  font-weight: 900;
+  line-height: 1;
 }

@@ -6,7 +6,11 @@
     "version": "v1",
     "path": "src\\ai_model\\best_angle_classifier_2.pt"
   },
-  "generated_at": "2026-04-07T21:21:17.774899+08:00",
+  "blur_detection": {
+    "method": "variance_of_laplacian",
+    "threshold": 100.0
+  },
+  "generated_at": "2026-04-08T13:54:24.189385+08:00",
   "required_angles": [
     "back",
     "front",
@@ -15,6 +19,7 @@
     "top"
   ],
   "session_summary": {
+    "target_object": "laptop",
     "detected_object": "laptop",
     "captured_angles": [
       "front",
@@ -35,8 +40,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "front",
       "confidence": 0.494447,
+      "blur_score": 46.06728,
+      "blur_warning": true,
       "duplicate_warning": false,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 39,
@@ -45,8 +53,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "right",
       "confidence": 0.617912,
+      "blur_score": 48.576171,
+      "blur_warning": true,
       "duplicate_warning": false,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 40,
@@ -55,8 +66,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "right",
       "confidence": 0.999247,
+      "blur_score": 69.976525,
+      "blur_warning": true,
       "duplicate_warning": true,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 41,
@@ -65,8 +79,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "top",
       "confidence": 0.715604,
+      "blur_score": 33.926447,
+      "blur_warning": true,
       "duplicate_warning": false,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 42,
@@ -75,8 +92,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "right",
       "confidence": 0.924866,
+      "blur_score": 54.763884,
+      "blur_warning": true,
       "duplicate_warning": true,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     },
     {
       "media_id": 43,
@@ -85,8 +105,11 @@
       "predicted_object": "laptop",
       "predicted_angle": "right",
       "confidence": 0.411814,
+      "blur_score": 53.656503,
+      "blur_warning": true,
       "duplicate_warning": true,
-      "error": null
+      "error": null,
+      "target_mismatch_warning": false
     }
   ]
 }
