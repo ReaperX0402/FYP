@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 from flask import Flask, redirect, url_for
-from dotenv import load_dotenv
 
+from src.config import Config
+from src.startup import ensure_directories
 from src.db.session import build_engine, init_session_factory
 from src.web.routes.decisions import bp as decisions_bp
 from src.web.routes.ingestion import bp as ingestion_bp
@@ -11,14 +12,18 @@ from src.web.routes.auth import bp as auth_bp
 from src.web.routes.exports import bp as exports_bp
 from src.web.routes.sessions import bp as sessions_bp
 
-def create_app() -> Flask:
-    project_root = Path(__file__).resolve().parent.parent
-    load_dotenv(project_root / ".env", override=True)
 
+def create_app() -> Flask:
     templates_dir = Path(__file__).resolve().parent / "web" / "templates"
     app = Flask(__name__, template_folder=str(templates_dir))
-    app.secret_key = "dev" 
 
+    # Load app config
+    app.config["SECRET_KEY"] = Config.SECRET_KEY
+
+    # Ensure local directories exist
+    ensure_directories()
+
+    # Init DB engine/session factory
     engine = build_engine(echo=False)
     init_session_factory(engine)
 
@@ -39,8 +44,5 @@ def create_app() -> Flask:
     @app.get("/")
     def index():
         return redirect(url_for("auth.login"))
-    return app
 
-if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    return app
