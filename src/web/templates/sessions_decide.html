@@ -115,19 +115,19 @@
 
                       {% if ai %}
                         <div class="thumb-ai-badges">
-                          {% if ai.confidence is not none %}
-                            {% set conf = ai.confidence %}
+                          {% set conf = ai.get('confidence') %}
+                          {% if conf is not none %}
                             <span class="pill
                               {{ 'pill-good' if conf >= 0.85 else ('pill-mid' if conf >= 0.5 else 'pill-bad') }}">
                               Conf {{ '%.2f'|format(conf) }}
                             </span>
                           {% endif %}
 
-                          {% if ai.blur_warning %}
+                          {% if ai.get('blur_warning') %}
                             <span class="pill pill-warn">Blurry</span>
                           {% endif %}
 
-                          {% if ai.duplicate_warning %}
+                          {% if ai.get('duplicate_warning') %}
                             <span class="pill pill-warn">Duplicate</span>
                           {% endif %}
                         </div>
@@ -138,7 +138,7 @@
                     </span>
                   </div>
 
-                  {% if ai and ai.target_mismatch_warning %}
+                  {% if ai and ai.get('target_mismatch_warning') %}
                     <div class="thumb-warning-text">
                       Possible non-target UUT image
                     </div>
@@ -176,29 +176,28 @@
 
                       {% if ai %}
                         <div class="thumb-ai-badges">
-                          {% if ai.confidence is not none %}
-                            {% set conf = ai.confidence %}
+                          {% set conf = ai.get('confidence') %}
+                          {% if conf is not none %}
                             <span class="pill
                               {{ 'pill-good' if conf >= 0.85 else ('pill-mid' if conf >= 0.5 else 'pill-bad') }}">
                               Conf {{ '%.2f'|format(conf) }}
                             </span>
                           {% endif %}
 
-                          {% if ai.blur_warning %}
+                          {% if ai.get('blur_warning') %}
                             <span class="pill pill-warn">Blurry</span>
                           {% endif %}
 
-                          {% if ai.duplicate_warning %}
+                          {% if ai.get('duplicate_warning') %}
                             <span class="pill pill-warn">Duplicate</span>
                           {% endif %}
                         </div>
                       {% endif %}
                     </div>
-
                     <span class="pill pill-rejected">rejected</span>
                   </div>
 
-                  {% if ai and ai.target_mismatch_warning %}
+                  {% if ai and ai.get('target_mismatch_warning') %}
                     <div class="thumb-warning-text">
                       Possible non-target UUT image
                     </div>

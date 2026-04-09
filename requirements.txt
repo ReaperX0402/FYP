@@ -1,0 +1,11 @@
+Flask
+python-dotenv
+SQLAlchemy
+psycopg[binary]
+gunicorn
+ultralytics
+opencv-python
+torch
+numpy
+Pillow
+olympuswifi
