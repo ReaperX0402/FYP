@@ -28,8 +28,10 @@ def create_app() -> Flask:
     init_session_factory(engine)
 
     # Init DB tables
+    """
     from src.db.init_db import init_db
     init_db(engine)
+    """
 
     # Register blueprints
     app.register_blueprint(auth_bp)
