@@ -299,7 +299,17 @@ class AIReviewManifestService:
             if resolved is None:
                 media_results.append({
                     "media_id": row.media_id,
-                    "error": "Image not found"
+                    "filename": row.filename,
+                    "predicted_class": None,
+                    "predicted_object": None,
+                    "predicted_angle": None,
+                    "confidence": None,
+                    "blur_score": None,
+                    "blur_warning": False,
+                    "duplicate_warning": False,
+                    "target_mismatch_warning": False,
+                    "error": "Image not found",
+                    "ai_reasons": ["Processing error"],
                 })
                 continue
 

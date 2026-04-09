@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from src.db.base import Base, DB_SCHEMA
 from src.db.models import (
-    Jobs, Operators, ImportSession, Media, Decisions, Exports, LocalArchives, ExportDeliveries
+    Jobs, Operators, ImportSession, Media, Decisions, Exports, LocalArchives
 )
 
 from dotenv import load_dotenv
@@ -21,6 +21,8 @@ def main() -> None:
 
     with engine.begin() as conn:
         conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DB_SCHEMA};"))
+    
+    Base.metadata.create_all(bind=engine)
 
     with Session(engine) as s:
         # 1) operator + job
@@ -91,22 +93,6 @@ def main() -> None:
         )
         s.add(arch)
         s.commit()
-
-        # 7) export delivery log (operator copy)
-        delivery = ExportDeliveries(
-            export_id=exp.export_id,
-            delivered_by="op_001",
-            destination_path=r"C:\Users\USER\Downloads\export_001.zip",
-            result="succeeded",
-            error_message=None,
-        )
-        s.add(delivery)
-        s.commit()
-
-        print("✅ Smoke test completed OK")
-        print("import_session_id =", sess.import_session_id)
-        print("export_id =", exp.export_id)
-
 
 if __name__ == "__main__":
     main()
