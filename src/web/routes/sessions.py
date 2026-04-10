@@ -7,7 +7,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from sqlalchemy import select, func, case
 
 from src.db.session import SessionLocal
-from src.db.models import ImportSession, Jobs, Media, Decisions
+from src.db.models import ImportSession, Jobs, Media, Decisions, Exports
 from src.web.auth import login_required, get_current_operator_id
 
 bp = Blueprint("sessions", __name__)
@@ -38,12 +38,26 @@ def dashboard():
     operator_id = get_current_operator_id()
 
     with SessionLocal() as db:
-        sessions = db.scalars(
+        session_rows = db.scalars(
             select(ImportSession)
             .where(ImportSession.status == "running")
             .order_by(ImportSession.import_session_id.desc())
             .limit(20)
         ).all()
+
+        sessions = []
+
+        for s in session_rows:
+            export_exists = db.scalar(
+                select(Exports.export_id)
+                .where(Exports.import_session_id == s.import_session_id)
+                .limit(1)
+            ) is not None
+
+            sessions.append({
+                "session": s,
+                "has_export": export_exists,
+            })
 
     return render_template("dashboard.html", operator_id=operator_id, sessions=sessions)
 
@@ -107,7 +121,6 @@ def create_session():
 
     return redirect(url_for("ingestion.ingest_page", import_session_id=new_session.import_session_id))
 
-
 @bp.post("/sessions/<int:import_session_id>/complete")
 @login_required
 def complete_session(import_session_id: int):
@@ -122,6 +135,21 @@ def complete_session(import_session_id: int):
             flash("Only running sessions can be completed.", "error")
             return redirect(url_for("sessions.dashboard"))
 
+        has_valid_export = db.scalar(
+            select(Exports.export_id)
+            .where(Exports.import_session_id == import_session_id)
+            .where(Exports.status == "archived")
+            .limit(1)
+        ) is not None
+
+        if not has_valid_export:
+            flash(
+                "Session cannot be completed. No successful export found. Please generate an export first.",
+                "error"
+            )
+            return redirect(url_for("sessions.dashboard"))
+
+        # safe delete AFTER validation
         ok = _safe_delete_session_incoming_dir(import_session_id)
         if not ok:
             flash("Unsafe folder deletion blocked.", "error")

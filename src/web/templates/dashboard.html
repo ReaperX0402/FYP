@@ -46,7 +46,8 @@
             </tr>
           </thead>
           <tbody>
-            {% for s in sessions %}
+            {% for row in sessions %}
+            {% set s = row.session %}
             <tr>
               <td>{{ s.import_session_id }}</td>
               <td>{{ s.uut_serial }}</td>
@@ -56,12 +57,14 @@
                 <a class="action-link" href="{{ url_for('decisions.decide_page', import_session_id=s.import_session_id) }}">Decide</a>
                 <a class="action-link" href="{{ url_for('exports.export_page', import_session_id=s.import_session_id) }}">Export</a>
 
-                <button
-                  type="button"
-                  class="primary-btn"
-                  onclick="openCompleteModal('{{ s.import_session_id }}', '{{ s.uut_serial|e }}')">
-                  Complete Session
-                </button>
+                {% if row.has_export %}
+                  <button
+                    type="button"
+                    class="primary-btn"
+                    onclick="openCompleteModal('{{ s.import_session_id }}', '{{ s.uut_serial|e }}')">
+                    Complete Session
+                  </button>
+                {% endif %}
 
                 <button
                   type="button"
