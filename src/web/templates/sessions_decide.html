@@ -102,7 +102,7 @@
                   onclick='selectMedia(
                     {{ r.media_id | tojson }},
                     {{ url_for("decisions.media_file", media_id=r.media_id) | tojson }},
-                    {{ (r.decision_status or "UNDECIDED") | tojson }},
+                    {{ (r.decision_status or "undecided") | tojson }},
                     {{ (r.decision_reason or "") | tojson }},
                     {{ ai | tojson }}
                   )'
@@ -415,9 +415,9 @@
           ? `Blurry (${blurVal.toFixed(2)})`
           : `Clear (${blurVal.toFixed(2)})`;
 
-        if (blurVal >= 120) {
+        if (blurVal >= 42) {
           blurEl.className = "ai-detail-value ai-pill ai-pill-good";
-        } else if (blurVal >= 80) {
+        } else if (blurVal >= 30) {
           blurEl.className = "ai-detail-value ai-pill ai-pill-mid";
         } else {
           blurEl.className = "ai-detail-value ai-pill ai-pill-bad";
