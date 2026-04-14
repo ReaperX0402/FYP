@@ -268,10 +268,10 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
     ok = archive_manifest.exists() and archive_dir.exists()
 
     archive_row = LocalArchives(
-    export_id=export_row.export_id,
-    archive_path=str(archive_dir),
-    verify_status="verified" if ok else "failed",
-    last_error=None if ok else "Archive creation failed",
+        export_id=export_row.export_id,
+        archive_path=str(archive_dir),
+        verify_status="verified" if ok else "failed",
+        last_error=None if ok else "Archive creation failed"
     )
 
     db.add(archive_row)
