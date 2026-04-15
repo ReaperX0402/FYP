@@ -70,6 +70,8 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
     path = Path(image_path)
     img = Image.open(path)
 
+    original_exif = img.info.get("exif")
+
     has_alpha = (img.mode in ("RGBA", "LA")) or ("transparency" in getattr(img, "info", {}))
     base = img.convert("RGBA" if has_alpha else "RGB")
     w, h = base.size
@@ -180,5 +182,8 @@ def burn_watermark(image_path: str, *, uut_serial: str, dt_text: str, logo_path:
     if fmt == "JPEG":
         combined = combined.convert("RGB")
         save_kwargs["quality"] = 95
+
+    if original_exif:
+        save_kwargs["exif"] = original_exif
 
     combined.save(path, format=fmt, **save_kwargs)

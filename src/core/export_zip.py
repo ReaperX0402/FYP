@@ -65,6 +65,43 @@ def _get_all_media(db: Session, import_session_id: int) -> list[tuple[Media, Dec
     )
     return list(db.execute(stmt).all())
 
+def resolve_source_file(media) -> Path:
+    candidates = []
+
+    if getattr(media, "local_path", None):
+        candidates.append(Path(media.local_path))
+
+    filename = Path(media.filename).name if getattr(media, "filename", None) else None
+    session_id = getattr(media, "import_session_id", None)
+
+    uut_serial = None
+    if getattr(media, "import_session", None) and getattr(media.import_session, "uut_serial", None):
+        uut_serial = media.import_session.uut_serial
+
+    if filename and session_id is not None and uut_serial:
+        archive_dir = Path("data/archive") / f"{uut_serial}_{session_id}"
+        candidates.append(archive_dir / filename)
+
+        if archive_dir.exists():
+            matches = list(archive_dir.rglob(filename))
+            candidates.extend(matches)
+
+    seen = set()
+    unique_candidates = []
+    for c in candidates:
+        sc = str(c)
+        if sc not in seen:
+            seen.add(sc)
+            unique_candidates.append(c)
+
+    for candidate in unique_candidates:
+        if candidate.exists() and candidate.is_file():
+            return candidate
+
+    raise FileNotFoundError(
+        f"Missing source file on disk. Checked: {', '.join(str(p) for p in unique_candidates)}"
+    )
+
 def _next_versioned_path(export_root: Path, base_name: str) -> tuple[str, Path]:
     """
     base_name like: ABC123_7.zip
@@ -140,7 +177,7 @@ def export_session_to_zip(*, db: Session, import_session_id: int, export_root: P
 
     seq = 1
     for media, decision in accepted:
-        src = Path(media.local_path)
+        src = resolve_source_file(media)
         if not src.exists():
             shutil.rmtree(staging_dir, ignore_errors=True)
             raise RuntimeError(f"Missing source file on disk: {src}")

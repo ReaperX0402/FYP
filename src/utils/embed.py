@@ -21,7 +21,8 @@ def embed_ipds_metadata(file_path: str,* , uut_serial: str, import_session_id: i
 
         # Pillow EXIF embedding (JPEG mainly)
         exif = img.getexif()
-        exif[0x9286] = metadata_text  # UserComment tag
+        exif[0x9286] = metadata_text  # UserComment
+        exif[0x010E] = metadata_text  # ImageDescription
 
         img.save(path, exif=exif)
 
