@@ -465,11 +465,3 @@ File may have moved/been removed; app tries incoming path first, then archive ca
 - Alembic includes a baseline migration and a later no-op migration stub.
 
 ---
-
-## Suggested next improvements
-
-- Add automated tests for routes and service logic.
-- Add stricter typing and linting/formatting pipeline.
-- Add role-based auth and operator management UI.
-- Add async/background job execution for export/AI generation.
-- Add cloud/offline sync for archives and exports.
